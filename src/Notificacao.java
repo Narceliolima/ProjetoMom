@@ -1,0 +1,30 @@
+import javax.swing.JOptionPane;
+
+public class Notificacao {
+
+	public static String addFila() {
+		
+		String nomeFila = null;
+		
+		nomeFila = JOptionPane.showInputDialog("Digite um nome de usuário");
+		
+		while(nomeFila!=null&&nomeFila.contentEquals("")) {
+			nomeFila = JOptionPane.showInputDialog("Nome inválido, digite um nome de usuário");
+		}
+		
+		return nomeFila;
+	}
+	
+	public static String addTopico() {
+		
+		String nomeTopico = null;
+		
+		nomeTopico = JOptionPane.showInputDialog("Digite um nome para o Topico");
+		
+		while(nomeTopico!=null&&nomeTopico.contentEquals("")) {
+			nomeTopico = JOptionPane.showInputDialog("Nome inválido, digite um nome para o Topico");
+		}
+		
+		return nomeTopico;
+	}
+}
