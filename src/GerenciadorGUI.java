@@ -8,6 +8,7 @@ import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JPanel;
 import java.awt.GridLayout;
+import javax.swing.JTextArea;
 
 
 public class GerenciadorGUI {
@@ -19,6 +20,7 @@ public class GerenciadorGUI {
 	private ArrayList<String> listaFilas;
 	private ArrayList<Integer> listaQntMensagens;
 	private ActionListener ato;
+	private JTextArea textLog;
 	//--------------------------------------------/-------------/--------------------------------------------//
 	
 	//--------------------------------------------/Paineis/Scroll/--------------------------------------------//
@@ -28,6 +30,7 @@ public class GerenciadorGUI {
 	private JPanel painelFilas;
 	private JScrollPane scrollPT;
 	private JScrollPane scrollPF;
+	private JScrollPane scrollLog;
 	private ArrayList<JLabel> celulasFila = new ArrayList<JLabel>();
 	private ArrayList<JLabel> celulasTopico = new ArrayList<JLabel>();
 	//--------------------------------------------/-------------/--------------------------------------------//
@@ -92,9 +95,17 @@ public class GerenciadorGUI {
 					if(nome!=null) {
 						if(!server.verificaFilaExiste(nome)) {
 							server.criaFila(nome);
+							listaFilas.add(nome);
+							listaQntMensagens.add(0);
 							criarBotao();
 							criarLabelFila(nome);
 							criarLabelFila("0");
+							iniciaBotao();
+							setMensagemLog("Usuário '"+nome+"' Criado");
+						}
+						else {
+							Notificacao.usuarioExiste(nome);
+							setMensagemLog("Usuário Duplicado");
 						}
 					}
 				}
@@ -109,11 +120,15 @@ public class GerenciadorGUI {
 				}
 				for(int i=0;i<xButton.size();i++) {
 					if(arg0.getSource() == xButton.get(i)) {
-						System.out.println(celulasFila.get(i*2).getText());
-						//server.removeFila(listaFilas.get(i));
-						//removeBotao(i);
-						//removeLabelFila(i);
-						//removeLabelFila(i);
+						setMensagemLog(celulasFila.get(i*2).getText());
+						setMensagemLog(listaFilas.get(i));
+						setMensagemLog(""+listaQntMensagens.get(i));
+						server.removeFila(celulasFila.get(i*2).getText());
+						setMensagemLog("Usuario '"+listaFilas.remove(i)+"' Deletado");
+						listaQntMensagens.remove(i);
+						removeBotao(i);
+						removeLabelFila(i);
+						removeLabelFila(i);
 					}
 				}
 				atualizaInterface();
@@ -123,17 +138,19 @@ public class GerenciadorGUI {
 		addUsuario.addActionListener(ato);
 		addTopico.addActionListener(ato);
 		
-		/*for(int i=0;i<xButton.size();i++) {
+		for(int i=0;i<xButton.size();i++) {
 			xButton.get(i).addActionListener(ato);
 			System.out.println(i);
-		}*/
+		}
 	}
 	
 	public void criarBotao() {
 		xButton.add(new JButton("X"));
-		xButton.get(xButton.size()-1).addActionListener(ato);
 		painelFilas.add(xButton.get(xButton.size()-1));
-		System.out.println(xButton.size()-1);
+	}
+	
+	public void iniciaBotao() {
+		xButton.get(xButton.size()-1).addActionListener(ato);
 	}
 	
 	public void removeBotao(int i) {
@@ -164,13 +181,17 @@ public class GerenciadorGUI {
 		this.listaQntMensagens = listaQntMensagens;
 	}
 	
+	public void setMensagemLog(String mensagem) {
+		textLog.append(mensagem+"\n");
+		textLog.setCaretPosition(textLog.getText().length());
+	}
+	
 	public void preenchePainelFila() {
 		for(int i=0;i<listaFilas.size();i++) {
 			criarBotao();
 			criarLabelFila(listaFilas.get(i));
 			criarLabelFila(""+listaQntMensagens.get(i));
 		}
-		//varreBotao();
 	}
 	
 	private void iniciaPaineis() {
@@ -202,8 +223,16 @@ public class GerenciadorGUI {
 		painelTopicos.setLayout(new GridLayout(0, 1, 10, 10));
 		
 		contaCelulas = new JLabel("0");
-		contaCelulas.setBounds(544, 12, 70, 15);
+		contaCelulas.setBounds(629, 5, 70, 15);
 		frame.getContentPane().add(contaCelulas);
+		
+		scrollLog = new JScrollPane();
+		scrollLog.setBounds(534, 32, 254, 391);
+		frame.getContentPane().add(scrollLog);
+		
+		textLog = new JTextArea();
+		textLog.setEditable(false);
+		scrollLog.setViewportView(textLog);
 	}
 	
 	private void iniciaLabels() {

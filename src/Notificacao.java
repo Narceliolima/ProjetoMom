@@ -27,4 +27,8 @@ public class Notificacao {
 		
 		return nomeTopico;
 	}
+	
+	public static void usuarioExiste(String nome) {
+		JOptionPane.showMessageDialog(null, "Usuario '"+nome+"' ja existe");
+	}
 }
