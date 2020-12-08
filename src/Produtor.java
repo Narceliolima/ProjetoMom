@@ -11,7 +11,7 @@ public class Produtor
 	 */	
 	private static String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 
-	private static String queueName = "teste";
+	private static String queueName = "randal";
 
 	public static void main(String[] args) throws JMSException
 	{

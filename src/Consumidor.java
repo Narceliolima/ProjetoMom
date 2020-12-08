@@ -12,7 +12,7 @@ public class Consumidor
 	 */
 	private static String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 
-	private static String queueName = "caiai";
+	private static String queueName = "randal";
 
 	public static void main(String[] args) throws JMSException
 	{

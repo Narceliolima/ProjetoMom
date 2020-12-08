@@ -2,7 +2,7 @@ import javax.swing.JOptionPane;
 
 public class Notificacao {
 
-	public static String addFila() {
+	public static String configuraNome() {
 		
 		String nomeFila = null;
 		
@@ -30,5 +30,9 @@ public class Notificacao {
 	
 	public static void usuarioExiste(String nome) {
 		JOptionPane.showMessageDialog(null, "Usuario '"+nome+"' ja existe");
+	}
+	
+	public static void topicoExiste(String nome) {
+		JOptionPane.showMessageDialog(null, "Topico '"+nome+"' ja existe");
 	}
 }

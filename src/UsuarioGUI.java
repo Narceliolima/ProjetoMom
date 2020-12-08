@@ -5,18 +5,20 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JPanel;
 import java.awt.GridLayout;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 
-public class GerenciadorGUI {
+public class UsuarioGUI {
 
 	//--------------------------------------------/-------------/--------------------------------------------//
 	private JFrame frame;
-	private GerenciadorGUI window;
+	private UsuarioGUI window;
 	private ServidorMOM server;
 	private ActionListener ato;
 	private JTextArea textLog;
@@ -25,10 +27,6 @@ public class GerenciadorGUI {
 	//--------------------------------------------/Paineis/Scroll/--------------------------------------------//
 	private JPanel resumoTopicos;
 	private JPanel resumoFilas;
-	private JPanel painelTopicos;
-	private JPanel painelFilas;
-	private JScrollPane scrollPT;
-	private JScrollPane scrollPF;
 	private JScrollPane scrollLog;
 	private ArrayList<JLabel> celulasFila = new ArrayList<JLabel>();
 	private ArrayList<JLabel> celulasTopico = new ArrayList<JLabel>();
@@ -45,19 +43,23 @@ public class GerenciadorGUI {
 	private JButton addTopico ;
 	private ArrayList<JButton> xButtonFila = new ArrayList<JButton>();
 	private ArrayList<JButton> xButtonTopico = new ArrayList<JButton>();
+	private JTextField chat;
 	//--------------------------------------------/-------------/--------------------------------------------//
+	private JTextArea textDestino;
+	private JTextArea textEnviado;
 	
 	public static void main(String[] args) {
 		
-		GerenciadorGUI gui = new GerenciadorGUI();
+		UsuarioGUI gui = new UsuarioGUI();
 		
 	}
 
-	public GerenciadorGUI() {
+	public UsuarioGUI() {
 		window = this;
 		try {
 			server = new ServidorMOM();
 		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		initialize();
@@ -65,19 +67,19 @@ public class GerenciadorGUI {
 
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 800, 460);
+		frame.setBounds(100, 100, 804, 610);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
 		
 		iniciaPaineis();
 		iniciaLabels();
-		iniciaValores();
+		//iniciaValores();
 		createRunnable();
 	}
 	
 	public void atualizaInterface() {
 		
-		labelLog.setText("Log");
+		labelLog.setText(""+celulasFila.size());
 		labelLog.setText(""+celulasTopico.size());
 		labelLog.setText("Log");
 	}
@@ -89,6 +91,14 @@ public class GerenciadorGUI {
 			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getSource() == addUsuario) {
 					String nome = Notificacao.configuraNome();
+					server.criaUsuario(new UsuarioRemoto() {
+						
+						@Override
+						public String getNome() throws RemoteException {
+							// TODO Auto-generated method stub
+							return null;
+						}
+					});
 					if(nome!=null) {
 						if(!server.verificaFilaExiste(nome)) {
 							server.criaFila(nome);
@@ -155,16 +165,25 @@ public class GerenciadorGUI {
 			xButtonTopico.get(i).addActionListener(ato);
 			System.out.println(i);
 		}
+		
+		chat.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				textEnviado.append(arg0.getActionCommand()+"\n");
+				chat.setText("");
+			}
+		});
 	}
 	
 	public void criarBotaoFila() {
 		xButtonFila.add(new JButton("X"));
-		painelFilas.add(xButtonFila.get(xButtonFila.size()-1));
+		//painelFilas.add(xButtonFila.get(xButtonFila.size()-1));
 	}
 	
 	public void criarBotaoTopico() {
 		xButtonTopico.add(new JButton("X"));
-		painelTopicos.add(xButtonTopico.get(xButtonTopico.size()-1));
+		//painelTopicos.add(xButtonTopico.get(xButtonTopico.size()-1));
 	}
 	
 	public void iniciaBotaoFila() {
@@ -177,32 +196,32 @@ public class GerenciadorGUI {
 	
 	public void removeBotaoFila(int i) {
 		xButtonFila.remove(i);
-		painelFilas.remove(i*3);
+		//painelFilas.remove(i*3);
 	}
 	
 	public void removeBotaoTopico(int i) {
 		xButtonTopico.remove(i);
-		painelTopicos.remove(i*2);
+		//painelTopicos.remove(i*2);
 	}
 	
 	public void criarLabelFila(String valor) {
 		celulasFila.add(new JLabel(""+valor));
-		painelFilas.add(celulasFila.get(celulasFila.size()-1));
+		//painelFilas.add(celulasFila.get(celulasFila.size()-1));
 	}
 	
 	public void criarLabelTopico(String valor) {
 		celulasTopico.add(new JLabel(""+valor));
-		painelTopicos.add(celulasTopico.get(celulasTopico.size()-1));
+		//painelTopicos.add(celulasTopico.get(celulasTopico.size()-1));
 	}
 
 	public void removeLabelFila(int i) {
 		celulasFila.remove(i*2);
-		painelFilas.remove(i*3);
+		//painelFilas.remove(i*3);
 	}
 	
 	public void removeLabelTopico(int i) {
 		celulasTopico.remove(i);
-		painelTopicos.remove(i*2);
+		//painelTopicos.remove(i*2);
 	}
 	
 	public void setlistaFilas(ArrayList<String> listaFilas) {
@@ -245,23 +264,7 @@ public class GerenciadorGUI {
 		resumoTopicos.setBounds(267, 0, 259, 435);
 		frame.getContentPane().add(resumoTopicos);
 		
-		scrollPF = new JScrollPane();
-		scrollPF.setBounds(12, 52, 235, 340);
-		resumoFilas.add(scrollPF);
-		
-		scrollPT = new JScrollPane();
-		scrollPT.setBounds(12, 52, 235, 340);
-		resumoTopicos.add(scrollPT);
-		
-		painelFilas = new JPanel();
-		scrollPF.setViewportView(painelFilas);
-		painelFilas.setLayout(new GridLayout(0, 3, 10, 10));
-		
-		painelTopicos = new JPanel();
-		scrollPT.setViewportView(painelTopicos);
-		painelTopicos.setLayout(new GridLayout(0, 2, 10, 10));
-		
-		labelLog = new JLabel("0");
+		labelLog = new JLabel("Log");
 		labelLog.setBounds(645, 5, 42, 15);
 		frame.getContentPane().add(labelLog);
 		
@@ -272,6 +275,19 @@ public class GerenciadorGUI {
 		textLog = new JTextArea();
 		textLog.setEditable(false);
 		scrollLog.setViewportView(textLog);
+		
+		JScrollPane scrollLog_1_1 = new JScrollPane();
+		scrollLog_1_1.setBounds(10, 480, 794, 93);
+		frame.getContentPane().add(scrollLog_1_1);
+		
+		chat = new JTextField();
+		scrollLog_1_1.setViewportView(chat);
+		chat.setColumns(10);
+		
+		textDestino = new JTextArea();
+		textDestino.setText("Enviar pra quem");
+		textDestino.setBounds(12, 447, 776, 25);
+		frame.getContentPane().add(textDestino);
 	}
 	
 	private void iniciaLabels() {//Reajuste a interface
@@ -300,9 +316,25 @@ public class GerenciadorGUI {
 		addUsuario.setBounds(12, 398, 235, 25);
 		resumoFilas.add(addUsuario);
 		
+		JScrollPane scrollLog_1 = new JScrollPane();
+		scrollLog_1.setBounds(12, 54, 235, 340);
+		resumoFilas.add(scrollLog_1);
+		
+		textEnviado = new JTextArea();
+		textEnviado.setEditable(false);
+		scrollLog_1.setViewportView(textEnviado);
+		
 		addTopico = new JButton("Novo Topico");
 		addTopico.setBounds(12, 398, 235, 25);
 		resumoTopicos.add(addTopico);
+		
+		JScrollPane scrollLog_1_1 = new JScrollPane();
+		scrollLog_1_1.setBounds(12, 56, 235, 340);
+		resumoTopicos.add(scrollLog_1_1);
+		
+		JTextArea textRecebido = new JTextArea();
+		textRecebido.setEditable(false);
+		scrollLog_1_1.setViewportView(textRecebido);
 	}
 	
 	private void iniciaValores() {

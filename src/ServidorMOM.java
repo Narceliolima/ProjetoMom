@@ -1,3 +1,7 @@
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -11,11 +15,29 @@ import javax.jms.QueueSession;
 import javax.jms.Session;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 
-public class ServidorMOM {
-	
+public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
+
+	private static final long serialVersionUID = 1L;
 	private String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 	private ActiveMQConnection conexao;
+	private ArrayList<UsuarioRemoto> listaUsuario = new ArrayList<UsuarioRemoto>();
+	private Registry registro;
+	
+	public ServidorMOM() throws RemoteException {
+		super();
+		
+		String host = "localhost";
+		int porta = 8888;		
+		
+		try {
+			registro = LocateRegistry.createRegistry(porta);
+			registro.rebind("//"+host+":"+porta+"/Servidor",this);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
 	public void conectaBroker() {
 		
@@ -36,6 +58,62 @@ public class ServidorMOM {
 		}
 	}
 	
+	public int conectaUsuario(UsuarioRemoto usuario) throws RemoteException {
+		
+		String nome = usuario.getNome();
+		boolean filaExiste = verificaFilaExiste(nome);
+		boolean usuarioExiste = verificaUsuarioExiste(nome);
+		System.out.println(filaExiste);
+		System.out.println(usuarioExiste);
+		
+		if(!filaExiste&&!usuarioExiste) {
+			criaFila(nome);
+			criaUsuario(usuario);
+			return 1;
+			//setMensagemLog("Usuário '"+nome+"' Criado");
+		}
+		else if(!usuarioExiste) {
+			reconectaUsuario(usuario);
+			return 0;
+		}
+		else {
+			return -1;
+			//setMensagemLog("Erro: Usuário Duplicado");
+		}
+	}
+	
+	public void reconectaUsuario(UsuarioRemoto usuario) {
+		
+		try {
+			String nome = usuario.getNome();
+			for(int i=0;i<listaUsuario.size();i++) {
+				if(listaUsuario.get(i).getNome().contentEquals(nome)) {
+					listaUsuario.set(i, usuario);
+					System.out.println("Usuario atualizado");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public boolean verificaUsuarioExiste(String nome) {
+		
+		try {
+			if(!listaUsuario.isEmpty()) {
+				for(int i=0;i<listaUsuario.size();i++) {
+					if(listaUsuario.get(i).getNome().contentEquals(nome)) {
+						return true;
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
 	public boolean verificaFilaExiste(String nomeFila) {
 		
 		ArrayList<String> nomeFilas = getFilas();
@@ -48,6 +126,24 @@ public class ServidorMOM {
 		}
 		
 		return false;
+	}
+	
+	public boolean verificaTopicoExiste(String nomeTopico) {
+		
+		ArrayList<String> nomeTopicos = getTopicos();
+		int i;
+		
+		for(i=0;i<nomeTopicos.size();i++) {
+			if(nomeTopico.contentEquals(nomeTopicos.get(i))) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public void criaUsuario(UsuarioRemoto usuario) {
+		listaUsuario.add(usuario);
 	}
 	
 	public boolean criaFila(String nomeFila) {
@@ -103,8 +199,17 @@ public class ServidorMOM {
 		desconectaBroker();
 	}
 	
-	public void removeTopico() {
+	public void removeTopico(String nomeTopico) {
 		
+		conectaBroker();
+		
+		try {
+			conexao.destroyDestination(new ActiveMQTopic(nomeTopico));
+		} catch (JMSException e) {
+			e.printStackTrace();
+		}
+		
+		desconectaBroker();
 	}
 	
 	public ArrayList<String> getFilas() {
@@ -154,5 +259,26 @@ public class ServidorMOM {
 		desconectaBroker();
 		
 		return k;
+	}
+	
+	public ArrayList<String> getTopicos() {
+		
+		ArrayList<String> nomeTopicos = new ArrayList<String>();
+		
+		conectaBroker();
+		
+		try {
+			Set<ActiveMQTopic> listaTopico = conexao.getDestinationSource().getTopics();
+			Iterator<ActiveMQTopic> iterator = listaTopico.iterator();
+			while(iterator.hasNext()) {
+				nomeTopicos.add(iterator.next().getTopicName());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		desconectaBroker();
+		
+		return nomeTopicos;
 	}
 }
