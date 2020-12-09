@@ -10,7 +10,7 @@ public class Publisher{
 	
  	private static String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 
-	private static String topicName = "teste";
+	private static String topicName = "raspberry";
     
 	
 	public static void main(String[] args) throws JMSException

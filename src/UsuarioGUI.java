@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.AbstractButton;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JPanel;
 import java.awt.GridLayout;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JRadioButton;
 
 
 public class UsuarioGUI {
@@ -19,25 +21,24 @@ public class UsuarioGUI {
 	//--------------------------------------------/-------------/--------------------------------------------//
 	private JFrame frame;
 	private UsuarioGUI window;
-	private ServidorMOM server;
+	private Usuario usuario;
 	private ActionListener ato;
 	private JTextArea textLog;
 	//--------------------------------------------/-------------/--------------------------------------------//
 	
 	//--------------------------------------------/Paineis/Scroll/--------------------------------------------//
 	private JPanel resumoTopicos;
-	private JPanel resumoFilas;
+	private JPanel resumoUsuario;
 	private JScrollPane scrollLog;
 	private ArrayList<JLabel> celulasFila = new ArrayList<JLabel>();
 	private ArrayList<JLabel> celulasTopico = new ArrayList<JLabel>();
 	//--------------------------------------------/-------------/--------------------------------------------//
 	
 	//--------------------------------------------/Labels/Botoes/--------------------------------------------//
-	private JLabel labelFilas;
+	private JLabel labelUsuarios;
 	private JLabel labelTopicos;
-	private JLabel nomeFila;
+	private JLabel nomeUsuario;
 	private JLabel nomeTopico;
-	private JLabel qntMensagensFila;	
 	private JLabel labelLog;
 	private JButton addUsuario;
 	private JButton addTopico ;
@@ -46,7 +47,14 @@ public class UsuarioGUI {
 	private JTextField chat;
 	//--------------------------------------------/-------------/--------------------------------------------//
 	private JTextArea textDestino;
-	private JTextArea textEnviado;
+	private JTextArea textUsuarios;
+	private JScrollPane scrollUsuario;
+	private JScrollPane scrollChat;
+	private JScrollPane scrollTopico;
+	private JTextArea textTopicos;
+	private JRadioButton radioUsuario;
+	private JRadioButton radioTopico;
+	private ButtonGroup radioGrupo = new ButtonGroup();
 	
 	public static void main(String[] args) {
 		
@@ -57,9 +65,8 @@ public class UsuarioGUI {
 	public UsuarioGUI() {
 		window = this;
 		try {
-			server = new ServidorMOM();
+			usuario = new Usuario(window);
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		initialize();
@@ -75,6 +82,9 @@ public class UsuarioGUI {
 		iniciaLabels();
 		//iniciaValores();
 		createRunnable();
+		usuario.solicitaConexao();
+		recebeMensagensUsuarios();
+		setMensagemLog("Bem vindo(a) "+usuario.nome);
 	}
 	
 	public void atualizaInterface() {
@@ -88,7 +98,7 @@ public class UsuarioGUI {
 		
 		ato = new ActionListener() {
 			
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent arg0) {/*
 				if(arg0.getSource() == addUsuario) {
 					String nome = Notificacao.configuraNome();
 					server.criaUsuario(new UsuarioRemoto() {
@@ -113,23 +123,13 @@ public class UsuarioGUI {
 							setMensagemLog("Erro: Usuário Duplicado");
 						}
 					}
-				}
+				}*/
 				if(arg0.getSource() == addTopico) {
 					String nome = Notificacao.addTopico();
 					if(nome!=null) {
-						if(!server.verificaTopicoExiste(nome)) {
-							server.criaTopico(nome);
-							criarBotaoTopico();
-							criarLabelTopico(nome);
-							iniciaBotaoTopico();
-							setMensagemLog("Topico '"+nome+"' Criado");
-						}
-						else {
-							Notificacao.topicoExiste(nome);
-							setMensagemLog("Erro: Topico Duplicado");
-						}
+						usuario.recebeMensagem(nome, false);
 					}
-				}
+				}/*
 				for(int i=0;i<xButtonFila.size();i++) {
 					if(arg0.getSource() == xButtonFila.get(i)) {
 						setMensagemLog(celulasFila.get(i*2).getText());
@@ -148,7 +148,7 @@ public class UsuarioGUI {
 						removeBotaoTopico(i);
 						removeLabelTopico(i);
 					}
-				}
+				}*/
 				atualizaInterface();
 			}
 		};
@@ -168,13 +168,42 @@ public class UsuarioGUI {
 		
 		chat.addActionListener(new ActionListener() {
 
-			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				textEnviado.append(arg0.getActionCommand()+"\n");
+				String mensagem = arg0.getActionCommand();
+				if(radioUsuario.isSelected()) {
+					textUsuarios.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
+					usuario.enviaMensagem(textDestino.getText(), usuario.nome+": "+mensagem, true);
+					
+				}
+				else {
+					textTopicos.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
+					usuario.enviaMensagem(textDestino.getText(), usuario.nome+">"+textDestino.getText()+": "+mensagem, false);
+				}
 				chat.setText("");
 			}
 		});
 	}
+	
+	public void recebeMensagensUsuarios() {
+		ArrayList<String> listaMensagens = usuario.recebeMensagem(usuario.nome, true);
+		while(!listaMensagens.isEmpty()) {
+			textUsuarios.append("Você<"+listaMensagens.remove(0)+"\n");
+		}
+	}
+	
+	public void escreveMensagensTopico(String mensagem) {
+		textUsuarios.append(mensagem);
+	}
+	
+	/*public void escreveChatUsuarios(String mensagem) {
+		textUsuarios.append("Você>"+textDestino.getText()+": "+mensagem);
+		usuario.enviaMensagem(textDestino.getText(), mensagem, true);
+	}
+	
+	public void escreveChatTopico(String mensagem) {
+		textTopicos.append("Você>"+textDestino.getText()+": "+mensagem);
+		usuario.enviaMensagem(textDestino.getText(), mensagem, false);
+	}*/
 	
 	public void criarBotaoFila() {
 		xButtonFila.add(new JButton("X"));
@@ -254,10 +283,10 @@ public class UsuarioGUI {
 	
 	private void iniciaPaineis() {
 		
-		resumoFilas = new JPanel();
-		resumoFilas.setBounds(0, 0, 259, 435);
-		resumoFilas.setLayout(null);
-		frame.getContentPane().add(resumoFilas);
+		resumoUsuario = new JPanel();
+		resumoUsuario.setBounds(0, 0, 259, 435);
+		resumoUsuario.setLayout(null);
+		frame.getContentPane().add(resumoUsuario);
 		
 		resumoTopicos = new JPanel();
 		resumoTopicos.setLayout(null);
@@ -276,68 +305,76 @@ public class UsuarioGUI {
 		textLog.setEditable(false);
 		scrollLog.setViewportView(textLog);
 		
-		JScrollPane scrollLog_1_1 = new JScrollPane();
-		scrollLog_1_1.setBounds(10, 480, 794, 93);
-		frame.getContentPane().add(scrollLog_1_1);
+		scrollChat = new JScrollPane();
+		scrollChat.setBounds(10, 480, 782, 93);
+		frame.getContentPane().add(scrollChat);
 		
 		chat = new JTextField();
-		scrollLog_1_1.setViewportView(chat);
+		scrollChat.setViewportView(chat);
 		chat.setColumns(10);
 		
 		textDestino = new JTextArea();
 		textDestino.setText("Enviar pra quem");
-		textDestino.setBounds(12, 447, 776, 25);
+		textDestino.setBounds(367, 447, 421, 25);
 		frame.getContentPane().add(textDestino);
+		
 	}
 	
 	private void iniciaLabels() {//Reajuste a interface
 		
-		labelFilas = new JLabel("Filas");
-		labelFilas.setBounds(102, 6, 44, 15);
-		resumoFilas.add(labelFilas);
+		labelUsuarios = new JLabel("Usuarios");
+		labelUsuarios.setBounds(88, 6, 74, 15);
+		resumoUsuario.add(labelUsuarios);
 		
 		labelTopicos = new JLabel("Topicos");
 		labelTopicos.setBounds(93, 6, 63, 15);
 		resumoTopicos.add(labelTopicos);
 		
-		nomeFila = new JLabel("Nome");
-		nomeFila.setBounds(93, 33, 53, 15);
-		resumoFilas.add(nomeFila);
+		nomeUsuario = new JLabel("Nome");
+		nomeUsuario.setBounds(12, 33, 53, 15);
+		resumoUsuario.add(nomeUsuario);
 		
 		nomeTopico = new JLabel("Nome");
-		nomeTopico.setBounds(141, 33, 53, 15);
+		nomeTopico.setBounds(12, 35, 53, 15);
 		resumoTopicos.add(nomeTopico);
-		
-		qntMensagensFila = new JLabel("Qnt msg");
-		qntMensagensFila.setBounds(158, 33, 74, 15);
-		resumoFilas.add(qntMensagensFila);
 		
 		addUsuario = new JButton("Novo Usuario");
 		addUsuario.setBounds(12, 398, 235, 25);
-		resumoFilas.add(addUsuario);
+		resumoUsuario.add(addUsuario);
 		
-		JScrollPane scrollLog_1 = new JScrollPane();
-		scrollLog_1.setBounds(12, 54, 235, 340);
-		resumoFilas.add(scrollLog_1);
+		scrollUsuario = new JScrollPane();
+		scrollUsuario.setBounds(12, 54, 235, 340);
+		resumoUsuario.add(scrollUsuario);
 		
-		textEnviado = new JTextArea();
-		textEnviado.setEditable(false);
-		scrollLog_1.setViewportView(textEnviado);
+		textUsuarios = new JTextArea();
+		textUsuarios.setEditable(false);
+		scrollUsuario.setViewportView(textUsuarios);
 		
 		addTopico = new JButton("Novo Topico");
 		addTopico.setBounds(12, 398, 235, 25);
 		resumoTopicos.add(addTopico);
 		
-		JScrollPane scrollLog_1_1 = new JScrollPane();
-		scrollLog_1_1.setBounds(12, 56, 235, 340);
-		resumoTopicos.add(scrollLog_1_1);
+		scrollTopico = new JScrollPane();
+		scrollTopico.setBounds(12, 56, 235, 340);
+		resumoTopicos.add(scrollTopico);
 		
-		JTextArea textRecebido = new JTextArea();
-		textRecebido.setEditable(false);
-		scrollLog_1_1.setViewportView(textRecebido);
+		textTopicos = new JTextArea();
+		textTopicos.setEditable(false);
+		scrollTopico.setViewportView(textTopicos);
+		
+		radioUsuario = new JRadioButton("Usuario");
+		radioUsuario.setSelected(true);
+		radioUsuario.setBounds(28, 449, 149, 23);
+		radioGrupo.add(radioUsuario);
+		frame.getContentPane().add(radioUsuario);
+		
+		radioTopico = new JRadioButton("Topico");
+		radioTopico.setBounds(181, 449, 149, 23);
+		radioGrupo.add(radioTopico);
+		frame.getContentPane().add(radioTopico);
 	}
 	
-	private void iniciaValores() {
+	/*private void iniciaValores() {
 		
 		ArrayList<String> listaFilas = server.getFilas();
 		ArrayList<Integer> listaQntMensagens = new ArrayList<Integer>();
@@ -349,7 +386,7 @@ public class UsuarioGUI {
 		preenchePainelFila(listaFilas, listaQntMensagens);
 		preenchePainelTopico(listaTopicos);
 		atualizaInterface();
-	}
+	}*/
 	
 	private void createRunnable() {
 		EventQueue.invokeLater(new Runnable() {

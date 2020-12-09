@@ -8,5 +8,5 @@ public interface ServidorRemoto extends Remote{
 	public boolean produzMensagemFila(String nomeFila, String conteudoMsg) throws RemoteException;
 	public boolean produzMensagemTopico(String nomeTopico, String conteudoMsg) throws RemoteException;
 	public ArrayList<String> recebeMensagemFila(String nomeFila) throws RemoteException;
-	//public ArrayList<String> recebeMensagemTopico(String nomeTopico) throws RemoteException;
+	public void assinaTopico(String nomeTopico, String nomeUsuario) throws RemoteException;
 }

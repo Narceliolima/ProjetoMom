@@ -8,11 +8,12 @@ import java.util.Scanner;
 public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 	
 	private static final long serialVersionUID = 1L;
-	private String nome;
+	protected String nome;
 	private Registry registro;
 	private ServidorRemoto server;
+	private UsuarioGUI janela;
 	
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		
 		try {
 			new Usuario();
@@ -20,23 +21,23 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 			e.printStackTrace();
 		}
 		System.out.println("Finalizado");
-	}
+	}*/
 	
-	public Usuario() throws RemoteException{
+	public Usuario(UsuarioGUI janela) throws RemoteException{
 		
+		this.janela = janela;
 		String host = "localhost";
 		int porta = 8888;
 		
 		try {
 			registro = LocateRegistry.getRegistry(porta);
-			//registro.bind("//"+host+":"+porta+"/Cliente",this);
 			server = (ServidorRemoto)registro.lookup("//"+host+":"+porta+"/Servidor");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 		
-		while(!solicitaConexao()) {
+		/*while(!solicitaConexao()) {
 			try {
 				Thread.sleep(200);
 			} catch (InterruptedException e) {
@@ -54,7 +55,7 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		
 		while(!nome.contentEquals("-1")) {
 			System.out.println("PrÓximo");
-			enviaMensagem(nome, mensagem, true);
+			enviaMensagem(nome, mensagem, false);
 			System.out.println("Digite o destino");
 			nome = s.nextLine();
 			System.out.println("Digite a mensagem");
@@ -69,7 +70,7 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
-		}
+		}*/
 	}
 	
 	public boolean solicitaConexao(){
@@ -107,19 +108,30 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		}
 	}
 	
-	public void recebeMensagem(String nome, boolean tipoFila) {
+	public ArrayList<String> recebeMensagem(String nome, boolean tipoFila) {
 		
 		try {
 			if(tipoFila) {
-				System.out.println(server.recebeMensagemFila(nome));
+				return server.recebeMensagemFila(nome);
 			}
-			/*else {
-				server.produzMensagemTopico(nome, conteudoMsg);
-			}*/
+			else {
+				server.assinaTopico(nome, this.nome);
+			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
+		return new ArrayList<String>();
 	}
+	
+	public void notificaMensagem() throws RemoteException{
+		janela.recebeMensagensUsuarios();
+	}
+	
+	public void setMensagemTopico(String mensagem) {
+		janela.escreveMensagensTopico(mensagem);
+	}
+	
+	
 	
 	public void run() {
 		

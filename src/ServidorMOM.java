@@ -33,7 +33,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		super();
 		
 		String host = "localhost";
-		int porta = 8888;		
+		int porta = 8888;
 		
 		try {
 			registro = LocateRegistry.createRegistry(porta);
@@ -66,17 +66,17 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		String nome = usuario.getNome();
 		boolean filaExiste = verificaFilaExiste(nome);
-		boolean usuarioExiste = verificaUsuarioExiste(nome);
+		int usuarioExiste = verificaUsuarioExiste(nome);
 		System.out.println(filaExiste);
 		System.out.println(usuarioExiste);
 		
-		if(!filaExiste&&!usuarioExiste) {
+		if(!filaExiste&&usuarioExiste==-1) {
 			criaFila(nome);
 			criaUsuario(usuario);
 			return 1;
 			//setMensagemLog("Usuário '"+nome+"' Criado");
 		}
-		else if(!usuarioExiste) {
+		else if(usuarioExiste==-1) {
 			reconectaUsuario(usuario);
 			return 0;
 		}
@@ -86,7 +86,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		}
 	}
 	
-	public boolean verificaUsuarioExiste(String nome) {
+	public int verificaUsuarioExiste(String nome) {
 		
 		int i = 0;
 		
@@ -94,7 +94,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			while(i<listaUsuario.size()) {
 				try {
 					if(listaUsuario.get(i).getNome().contentEquals(nome)) {
-						return true;
+						return i;
 					}
 					i++;
 				} catch (RemoteException e) {
@@ -103,7 +103,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			}
 		}
 		
-		return false;
+		return -1;
 	}
 	
 	public boolean verificaFilaExiste(String nomeFila) {
@@ -280,6 +280,8 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 	
 	public boolean produzMensagemFila(String nomeFila, String conteudoMsg) throws RemoteException {
 		
+		int i;
+		
 		conectaBroker();
 		
 		try {
@@ -296,6 +298,13 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		}
 		
 		desconectaBroker();
+		
+		i = verificaUsuarioExiste(nomeFila);
+		
+		if(i != -1) {
+			listaUsuario.get(i).notificaMensagem();
+		}
+		
 		return true;
 	}
 	
@@ -357,5 +366,9 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		desconectaBroker();
 		return listaMensagem;
+	}
+	
+	public void assinaTopico(String nomeTopico, String nomeUsuario) throws RemoteException {
+		new Assinante(this, nomeTopico, nomeUsuario);
 	}
 }
