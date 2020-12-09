@@ -2,16 +2,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
 import java.util.Scanner;
-import javax.jms.Destination;
-import javax.jms.JMSException;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-
-import org.apache.activemq.ActiveMQConnection;
 
 public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 	
@@ -52,6 +44,25 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 			}
 		}
 		
+		System.out.println(nome);
+		
+		Scanner s = new Scanner(System.in);
+		System.out.println("Digite o destino");
+		String nome = s.nextLine();
+		System.out.println("Digite a mensagem");
+		String mensagem = s.nextLine();
+		
+		while(!nome.contentEquals("-1")) {
+			System.out.println("PrÓximo");
+			enviaMensagem(nome, mensagem, true);
+			System.out.println("Digite o destino");
+			nome = s.nextLine();
+			System.out.println("Digite a mensagem");
+			mensagem = s.nextLine();
+		}
+		
+		recebeMensagem(this.nome, true);
+		
 		while(true) {
 			try {
 				Thread.sleep(200);
@@ -82,6 +93,34 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		return false;
 	}
 	
+	public void enviaMensagem(String nome, String conteudoMsg, boolean tipoFila) {
+		
+		try {
+			if(tipoFila) {
+				server.produzMensagemFila(nome, conteudoMsg);
+			}
+			else {
+				server.produzMensagemTopico(nome, conteudoMsg);
+			}
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public void recebeMensagem(String nome, boolean tipoFila) {
+		
+		try {
+			if(tipoFila) {
+				System.out.println(server.recebeMensagemFila(nome));
+			}
+			/*else {
+				server.produzMensagemTopico(nome, conteudoMsg);
+			}*/
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void run() {
 		
 		System.out.println("Novo usuario criado");
@@ -96,73 +135,6 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 			System.out.println("PrÓximo");
 		}
 	}
-	
-	/*public void conectaBroker() {
-		
-		try {
-			conexao = ActiveMQConnection.makeConnection(url);
-			conexao.start();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}		
-	}
-	
-	public void desconectaBroker() {
-		
-		try {
-			conexao.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public boolean produzMensagem(String nomeFila,String conteudoMsg) {
-		
-		conectaBroker();
-		
-		try {
-			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			Destination destino = sessao.createQueue(nomeFila);
-			MessageProducer produtor = sessao.createProducer(destino);
-			TextMessage mensagem = sessao.createTextMessage(conteudoMsg);
-			produtor.send(mensagem);
-			produtor.close();
-			sessao.close();
-		} catch (JMSException e) {
-			e.printStackTrace();
-			return false;
-		}
-		
-		desconectaBroker();
-		return true;
-	}
-	
-	public boolean consomeMensagem(String nomeFila) {
-		
-		conectaBroker();
-		
-		try {
-			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			Destination destino = sessao.createQueue(nomeFila);
-			MessageConsumer consumidor = sessao.createConsumer(destino);
-			Message mensagem = consumidor.receive();
-			if (mensagem instanceof TextMessage) {
-				TextMessage mensagemTexto = (TextMessage) mensagem;
-				String texto = mensagemTexto.getText();
-				System.out.println("Recebido: " + texto);
-			} else {
-				System.out.println("Recebido: " + mensagem);
-			}
-			consumidor.close();
-			sessao.close();
-		} catch (JMSException e) {
-			e.printStackTrace();
-			return false;
-		}
-		
-		desconectaBroker();
-		return true;
-	}*/
 	
 	public String getNome() throws RemoteException {
 		return nome;

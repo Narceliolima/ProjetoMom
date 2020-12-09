@@ -8,11 +8,15 @@ import java.util.Iterator;
 import java.util.Set;
 import javax.jms.Destination;
 import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Queue;
 import javax.jms.QueueBrowser;
 import javax.jms.QueueSession;
 import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -82,33 +86,21 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		}
 	}
 	
-	public void reconectaUsuario(UsuarioRemoto usuario) {
-		
-		try {
-			String nome = usuario.getNome();
-			for(int i=0;i<listaUsuario.size();i++) {
-				if(listaUsuario.get(i).getNome().contentEquals(nome)) {
-					listaUsuario.set(i, usuario);
-					System.out.println("Usuario atualizado");
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-	
 	public boolean verificaUsuarioExiste(String nome) {
 		
-		try {
-			if(!listaUsuario.isEmpty()) {
-				for(int i=0;i<listaUsuario.size();i++) {
+		int i = 0;
+		
+		if(!listaUsuario.isEmpty()) {
+			while(i<listaUsuario.size()) {
+				try {
 					if(listaUsuario.get(i).getNome().contentEquals(nome)) {
 						return true;
 					}
+					i++;
+				} catch (RemoteException e) {
+					listaUsuario.remove(i);
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		
 		return false;
@@ -140,6 +132,10 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		}
 		
 		return false;
+	}
+	
+	public void reconectaUsuario(UsuarioRemoto usuario) {
+		criaUsuario(usuario);
 	}
 	
 	public void criaUsuario(UsuarioRemoto usuario) {
@@ -280,5 +276,86 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		desconectaBroker();
 		
 		return nomeTopicos;
+	}
+	
+	public boolean produzMensagemFila(String nomeFila, String conteudoMsg) throws RemoteException {
+		
+		conectaBroker();
+		
+		try {
+			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Destination destino = sessao.createQueue(nomeFila);
+			MessageProducer produtor = sessao.createProducer(destino);
+			TextMessage mensagem = sessao.createTextMessage(conteudoMsg);
+			produtor.send(mensagem);
+			produtor.close();
+			sessao.close();
+		} catch (JMSException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		desconectaBroker();
+		return true;
+	}
+	
+	public boolean produzMensagemTopico(String nomeTopico, String conteudoMsg) throws RemoteException {
+		
+		conectaBroker();
+		
+		try {
+			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Destination destino = sessao.createTopic(nomeTopico);
+			MessageProducer publicador = sessao.createProducer(destino);
+			TextMessage mensagem = sessao.createTextMessage(conteudoMsg);
+			publicador.send(mensagem);
+			publicador.close();
+			sessao.close();
+		} catch (JMSException e) {
+			e.printStackTrace();
+			return false;
+		}
+		
+		desconectaBroker();
+		return true;
+	}
+	
+	public ArrayList<String> recebeMensagemFila(String nomeFila) throws RemoteException {
+		
+		ArrayList<String> listaMensagem = new ArrayList<String>();
+		
+		conectaBroker();
+		
+		try {
+			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			Queue fila = sessao.createQueue(nomeFila);
+			Destination destino = sessao.createQueue(nomeFila);
+			MessageConsumer consumidor = sessao.createConsumer(destino);
+			QueueBrowser browser = sessao.createBrowser(fila);
+			Enumeration<?> mensagensNaFila = browser.getEnumeration();
+			Message mensagem;
+			
+			while (mensagensNaFila.hasMoreElements()) {
+				mensagem = consumidor.receive();
+				
+				if (mensagem instanceof TextMessage) {
+					TextMessage mensagemTexto = (TextMessage) mensagem;
+					String texto = mensagemTexto.getText();
+					listaMensagem.add(texto);
+				} else {
+					listaMensagem.add(""+mensagem);
+				}
+				mensagensNaFila.nextElement();
+			}
+			
+			consumidor.close();
+			sessao.close();
+		} catch (JMSException e) {
+			e.printStackTrace();
+			listaMensagem.add("<error>");
+		}
+		
+		desconectaBroker();
+		return listaMensagem;
 	}
 }
