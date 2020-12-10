@@ -5,16 +5,13 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JPanel;
-import java.awt.GridLayout;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JRadioButton;
-
 
 public class UsuarioGUI {
 
@@ -23,42 +20,37 @@ public class UsuarioGUI {
 	private UsuarioGUI window;
 	private Usuario usuario;
 	private ActionListener ato;
-	private JTextArea textLog;
 	//--------------------------------------------/-------------/--------------------------------------------//
 	
-	//--------------------------------------------/Paineis/Scroll/--------------------------------------------//
+	//--------------------------------------------/Paineis/Scroll/Text--------------------------------------------//
 	private JPanel resumoTopicos;
 	private JPanel resumoUsuario;
 	private JScrollPane scrollLog;
-	private ArrayList<JLabel> celulasFila = new ArrayList<JLabel>();
-	private ArrayList<JLabel> celulasTopico = new ArrayList<JLabel>();
+	private JScrollPane scrollUsuario;
+	private JScrollPane scrollChat;
+	private JScrollPane scrollTopico;
+	private JTextArea textDestino;
+	private JTextArea textUsuarios;
+	private JTextArea textLog;
+	private JTextArea textTopicos;
 	//--------------------------------------------/-------------/--------------------------------------------//
 	
 	//--------------------------------------------/Labels/Botoes/--------------------------------------------//
 	private JLabel labelUsuarios;
 	private JLabel labelTopicos;
 	private JLabel labelLog;
+	private JLabel lblNome;
+	private JLabel lblDigiteAqui;
 	private JButton assinarTopico ;
-	private ArrayList<JButton> xButtonFila = new ArrayList<JButton>();
-	private ArrayList<JButton> xButtonTopico = new ArrayList<JButton>();
 	private JTextField chat;
 	//--------------------------------------------/-------------/--------------------------------------------//
-	private JTextArea textDestino;
-	private JTextArea textUsuarios;
-	private JScrollPane scrollUsuario;
-	private JScrollPane scrollChat;
-	private JScrollPane scrollTopico;
-	private JTextArea textTopicos;
 	private JRadioButton radioUsuario;
 	private JRadioButton radioTopico;
 	private ButtonGroup radioGrupo = new ButtonGroup();
-	private JLabel lblNome;
-	private JLabel lblDigiteAqui;
-	
+
 	public static void main(String[] args) {
 		
-		UsuarioGUI gui = new UsuarioGUI();
-		
+		new UsuarioGUI();
 	}
 
 	public UsuarioGUI() {
@@ -84,82 +76,21 @@ public class UsuarioGUI {
 		createRunnable();
 	}
 	
-	public void atualizaInterface() {
-		
-		labelLog.setText(""+celulasFila.size());
-		labelLog.setText(""+celulasTopico.size());
-		labelLog.setText("Log");
-	}
-	
 	public void varreBotao() {
 		
 		ato = new ActionListener() {
 			
-			public void actionPerformed(ActionEvent arg0) {/*
-				if(arg0.getSource() == addUsuario) {
-					String nome = Notificacao.configuraNome();
-					server.criaUsuario(new UsuarioRemoto() {
-						
-						@Override
-						public String getNome() throws RemoteException {
-							// TODO Auto-generated method stub
-							return null;
-						}
-					});
-					if(nome!=null) {
-						if(!server.verificaFilaExiste(nome)) {
-							server.criaFila(nome);
-							criarBotaoFila();
-							criarLabelFila(nome);
-							criarLabelFila("0");
-							iniciaBotaoFila();
-							setMensagemLog("Usuário '"+nome+"' Criado");
-						}
-						else {
-							Notificacao.usuarioExiste(nome);
-							setMensagemLog("Erro: Usuário Duplicado");
-						}
-					}
-				}*/
+			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getSource() == assinarTopico) {
 					String nome = Notificacao.addTopico();
 					if(nome!=null) {
 						usuario.recebeMensagem(nome, false);
 					}
-				}/*
-				for(int i=0;i<xButtonFila.size();i++) {
-					if(arg0.getSource() == xButtonFila.get(i)) {
-						setMensagemLog(celulasFila.get(i*2).getText());
-						server.removeFila(celulasFila.get(i*2).getText());
-						setMensagemLog("Usuario '"+celulasFila.get(i*2).getText()+"' Deletado");
-						removeBotaoFila(i);
-						removeLabelFila(i);
-						removeLabelFila(i);
-					}
 				}
-				for(int i=0;i<xButtonTopico.size();i++) {
-					if(arg0.getSource() == xButtonTopico.get(i)) {
-						setMensagemLog(celulasTopico.get(i).getText());
-						server.removeTopico(celulasTopico.get(i).getText());
-						setMensagemLog("Usuario '"+celulasTopico.get(i).getText()+"' Deletado");
-						removeBotaoTopico(i);
-						removeLabelTopico(i);
-					}
-				}*/
-				atualizaInterface();
 			}
 		};
+		
 		assinarTopico.addActionListener(ato);
-		
-		for(int i=0;i<xButtonFila.size();i++) {
-			xButtonFila.get(i).addActionListener(ato);
-			System.out.println(i);
-		}
-		
-		for(int i=0;i<xButtonTopico.size();i++) {
-			xButtonTopico.get(i).addActionListener(ato);
-			System.out.println(i);
-		}
 		
 		chat.addActionListener(new ActionListener() {
 
@@ -168,7 +99,6 @@ public class UsuarioGUI {
 				if(radioUsuario.isSelected()) {
 					textUsuarios.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
 					usuario.enviaMensagem(textDestino.getText(), usuario.nome+": "+mensagem, true);
-					
 				}
 				else {
 					textTopicos.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
@@ -190,82 +120,9 @@ public class UsuarioGUI {
 		textTopicos.append(mensagem+"\n");
 	}
 	
-	/*public void escreveChatUsuarios(String mensagem) {
-		textUsuarios.append("Você>"+textDestino.getText()+": "+mensagem);
-		usuario.enviaMensagem(textDestino.getText(), mensagem, true);
-	}
-	
-	public void escreveChatTopico(String mensagem) {
-		textTopicos.append("Você>"+textDestino.getText()+": "+mensagem);
-		usuario.enviaMensagem(textDestino.getText(), mensagem, false);
-	}*/
-	
-	public void criarBotaoFila() {
-		xButtonFila.add(new JButton("X"));
-		//painelFilas.add(xButtonFila.get(xButtonFila.size()-1));
-	}
-	
-	public void criarBotaoTopico() {
-		xButtonTopico.add(new JButton("X"));
-		//painelTopicos.add(xButtonTopico.get(xButtonTopico.size()-1));
-	}
-	
-	public void iniciaBotaoFila() {
-		xButtonFila.get(xButtonFila.size()-1).addActionListener(ato);
-	}
-	
-	public void iniciaBotaoTopico() {
-		xButtonTopico.get(xButtonTopico.size()-1).addActionListener(ato);
-	}
-	
-	public void removeBotaoFila(int i) {
-		xButtonFila.remove(i);
-		//painelFilas.remove(i*3);
-	}
-	
-	public void removeBotaoTopico(int i) {
-		xButtonTopico.remove(i);
-		//painelTopicos.remove(i*2);
-	}
-	
-	public void criarLabelFila(String valor) {
-		celulasFila.add(new JLabel(""+valor));
-		//painelFilas.add(celulasFila.get(celulasFila.size()-1));
-	}
-	
-	public void criarLabelTopico(String valor) {
-		celulasTopico.add(new JLabel(""+valor));
-		//painelTopicos.add(celulasTopico.get(celulasTopico.size()-1));
-	}
-
-	public void removeLabelFila(int i) {
-		celulasFila.remove(i*2);
-		//painelFilas.remove(i*3);
-	}
-	
-	public void removeLabelTopico(int i) {
-		celulasTopico.remove(i);
-		//painelTopicos.remove(i*2);
-	}
-	
 	public void setMensagemLog(String mensagem) {
 		textLog.append(mensagem+"\n");
 		textLog.setCaretPosition(textLog.getText().length());
-	}
-	
-	public void preenchePainelFila(ArrayList<String> listaFilas, ArrayList<Integer> listaQntMensagens) {
-		for(int i=0;i<listaFilas.size();i++) {
-			criarBotaoFila();
-			criarLabelFila(listaFilas.get(i));
-			criarLabelFila(""+listaQntMensagens.get(i));
-		}
-	}
-	
-	public void preenchePainelTopico(ArrayList<String> listaTopicos) {
-		for(int i=0;i<listaTopicos.size();i++) {
-			criarBotaoTopico();
-			criarLabelTopico(listaTopicos.get(i));
-		}
 	}
 	
 	private void iniciaPaineis() {
@@ -307,7 +164,7 @@ public class UsuarioGUI {
 		
 	}
 	
-	private void iniciaLabels() {//Reajuste a interface
+	private void iniciaLabels() {
 		
 		labelUsuarios = new JLabel("Mensagem Usuarios");
 		labelUsuarios.setBounds(55, 6, 152, 15);

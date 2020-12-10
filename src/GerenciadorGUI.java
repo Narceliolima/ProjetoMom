@@ -11,7 +11,6 @@ import javax.swing.JPanel;
 import java.awt.GridLayout;
 import javax.swing.JTextArea;
 
-
 public class GerenciadorGUI {
 
 	//--------------------------------------------/-------------/--------------------------------------------//
@@ -37,6 +36,8 @@ public class GerenciadorGUI {
 	//--------------------------------------------/Labels/Botoes/--------------------------------------------//
 	private JLabel labelFilas;
 	private JLabel labelTopicos;
+	private JLabel apagarFila;
+	private JLabel apagarTopico;
 	private JLabel nomeFila;
 	private JLabel nomeTopico;
 	private JLabel qntMensagensFila;	
@@ -46,14 +47,11 @@ public class GerenciadorGUI {
 	private ArrayList<JButton> xButtonFila = new ArrayList<JButton>();
 	private ArrayList<JButton> xButtonTopico = new ArrayList<JButton>();
 	//--------------------------------------------/-------------/--------------------------------------------//
-	private JLabel apagarFila;
-	private JLabel apagarTopico;
 	
 	
 	public static void main(String[] args) {
 		
-		GerenciadorGUI gui = new GerenciadorGUI();
-		
+		new GerenciadorGUI();
 	}
 
 	public GerenciadorGUI() {
@@ -81,7 +79,7 @@ public class GerenciadorGUI {
 	
 	public void atualizaInterface() {
 		
-		labelLog.setText("Log");
+		labelLog.setText(""+celulasFila.size());
 		labelLog.setText(""+celulasTopico.size());
 		labelLog.setText("Log");
 	}
@@ -231,14 +229,6 @@ public class GerenciadorGUI {
 		setMensagemLog("Topico '"+nome+"' Criado");
 	}
 	
-	public void setlistaFilas(ArrayList<String> listaFilas) {
-		//this.listaFilas = listaFilas;
-	}
-
-	public void setListaQntMensagens(ArrayList<Integer> listaQntMensagens) {
-		//this.listaQntMensagens = listaQntMensagens;
-	}
-	
 	public void setMensagemLog(String mensagem) {
 		textLog.append(mensagem+"\n");
 		textLog.setCaretPosition(textLog.getText().length());
@@ -287,7 +277,7 @@ public class GerenciadorGUI {
 		scrollPT.setViewportView(painelTopicos);
 		painelTopicos.setLayout(new GridLayout(0, 2, 10, 10));
 		
-		labelLog = new JLabel("0");
+		labelLog = new JLabel("Log");
 		labelLog.setBounds(645, 5, 42, 15);
 		frame.getContentPane().add(labelLog);
 		

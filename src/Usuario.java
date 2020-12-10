@@ -11,12 +11,14 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 	private Registry registro;
 	private ServidorRemoto server;
 	private UsuarioGUI janela;
+	private String host;
+	private int porta;
 	
 	public Usuario(UsuarioGUI janela) throws RemoteException{
-		
 		this.janela = janela;
-		String host = Notificacao.configuraHost();
-		int porta = Notificacao.configuraPorta();
+		
+		host = Notificacao.configuraHost();
+		porta = Notificacao.configuraPorta();
 		
 		try {
 			registro = LocateRegistry.getRegistry(porta);

@@ -36,6 +36,9 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		super();
 		this.janela = janela;
 		
+		host = Notificacao.configuraHost();
+		porta = Notificacao.configuraPorta();
+		
 		try {
 			registro = LocateRegistry.createRegistry(porta);
 			registro.rebind("//"+host+":"+porta+"/Servidor",this);
