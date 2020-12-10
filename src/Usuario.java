@@ -3,7 +3,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 	
@@ -13,21 +12,11 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 	private ServidorRemoto server;
 	private UsuarioGUI janela;
 	
-	/*public static void main(String[] args) {
-		
-		try {
-			new Usuario();
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
-		System.out.println("Finalizado");
-	}*/
-	
 	public Usuario(UsuarioGUI janela) throws RemoteException{
 		
 		this.janela = janela;
-		String host = "localhost";
-		int porta = 8888;
+		String host = Notificacao.configuraHost();
+		int porta = Notificacao.configuraPorta();
 		
 		try {
 			registro = LocateRegistry.getRegistry(porta);
@@ -36,41 +25,6 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		/*while(!solicitaConexao()) {
-			try {
-				Thread.sleep(200);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		System.out.println(nome);
-		
-		Scanner s = new Scanner(System.in);
-		System.out.println("Digite o destino");
-		String nome = s.nextLine();
-		System.out.println("Digite a mensagem");
-		String mensagem = s.nextLine();
-		
-		while(!nome.contentEquals("-1")) {
-			System.out.println("PrÓximo");
-			enviaMensagem(nome, mensagem, false);
-			System.out.println("Digite o destino");
-			nome = s.nextLine();
-			System.out.println("Digite a mensagem");
-			mensagem = s.nextLine();
-		}
-		
-		recebeMensagem(this.nome, true);
-		
-		while(true) {
-			try {
-				Thread.sleep(200);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-		}*/
 	}
 	
 	public boolean solicitaConexao(){
@@ -79,12 +33,12 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 			nome = Notificacao.configuraNome();
 			if(nome!=null) {
 				int resposta = server.conectaUsuario(this);
-				System.out.println(resposta);
+				janela.setMensagemLog("Codigo do retorno: "+resposta);
 				if(resposta==-1) {
 					Notificacao.usuarioExiste(nome);
 				}
 				else {
-					System.out.println("Connectado");
+					janela.setMensagemLog("Connectado");
 					return true;
 				}
 			}
@@ -98,10 +52,14 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		
 		try {
 			if(tipoFila) {
-				server.produzMensagemFila(nome, conteudoMsg);
+				if(!server.produzMensagemFila(nome, conteudoMsg)) {
+					Notificacao.naoExisteUsuario();
+				}
 			}
 			else {
-				server.produzMensagemTopico(nome, conteudoMsg);
+				if(!server.produzMensagemTopico(nome, conteudoMsg)) {
+					Notificacao.naoExisteTopico();
+				}
 			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -123,29 +81,17 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		return new ArrayList<String>();
 	}
 	
-	public void notificaMensagem() throws RemoteException{
+	public void notificaMensagem() throws RemoteException {
 		janela.recebeMensagensUsuarios();
 	}
 	
-	public void setMensagemTopico(String mensagem) {
-		janela.escreveMensagensTopico(mensagem);
+	public void notificaDesconexao() throws RemoteException {
+		Notificacao.desconectado();
+		System.exit(0);
 	}
 	
-	
-	
-	public void run() {
-		
-		System.out.println("Novo usuario criado");
-		Scanner s = new Scanner(System.in);
-		String nomeFila = s.nextLine();
-		String mensagem = s.nextLine();
-		
-		while(!nomeFila.contentEquals("-1")) {
-			//produzMensagem(nomeFila, mensagem);
-			nomeFila = s.nextLine();
-			mensagem = s.nextLine();
-			System.out.println("PrÓximo");
-		}
+	public void setMensagemTopico(String mensagem) throws RemoteException {
+		janela.escreveMensagensTopico(mensagem);
 	}
 	
 	public String getNome() throws RemoteException {

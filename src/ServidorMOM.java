@@ -16,7 +16,6 @@ import javax.jms.QueueBrowser;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.jms.TextMessage;
-
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -26,14 +25,16 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 	private static final long serialVersionUID = 1L;
 	private String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 	private ActiveMQConnection conexao;
-	private ArrayList<UsuarioRemoto> listaUsuario = new ArrayList<UsuarioRemoto>();
+	protected ArrayList<UsuarioRemoto> listaUsuario = new ArrayList<UsuarioRemoto>();
+	private ArrayList<Assinante> listaAssinates = new ArrayList<Assinante>();
 	private Registry registro;
+	private GerenciadorGUI janela;
+	private String host = "localhost";
+	private int porta = 9090;
 	
-	public ServidorMOM() throws RemoteException {
+	public ServidorMOM(GerenciadorGUI janela) throws RemoteException {
 		super();
-		
-		String host = "localhost";
-		int porta = 8888;
+		this.janela = janela;
 		
 		try {
 			registro = LocateRegistry.createRegistry(porta);
@@ -67,22 +68,21 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		String nome = usuario.getNome();
 		boolean filaExiste = verificaFilaExiste(nome);
 		int usuarioExiste = verificaUsuarioExiste(nome);
-		System.out.println(filaExiste);
-		System.out.println(usuarioExiste);
 		
 		if(!filaExiste&&usuarioExiste==-1) {
 			criaFila(nome);
 			criaUsuario(usuario);
+			janela.adicionaListaFila(nome);
 			return 1;
-			//setMensagemLog("Usuário '"+nome+"' Criado");
 		}
 		else if(usuarioExiste==-1) {
 			reconectaUsuario(usuario);
+			janela.setMensagemLog("Usuário '"+nome+"' reconectado");
 			return 0;
 		}
 		else {
+			janela.setMensagemLog("Erro: Usuário '"+nome+"' Duplicado");
 			return -1;
-			//setMensagemLog("Erro: Usuário Duplicado");
 		}
 	}
 	
@@ -152,7 +152,6 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			MessageProducer produtor = sessao.createProducer(destino);
 			produtor.close();
 			sessao.close();
-			//Assim que instanciar o cliente, criar uma fila e atrela-lo a ela, usando thread?
 		} catch (JMSException e) {
 			e.printStackTrace();
 			return false;
@@ -188,7 +187,11 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		try {
 			conexao.destroyDestination(new ActiveMQQueue(nomeFila));
-		} catch (JMSException e) {
+			int i = verificaUsuarioExiste(nomeFila);
+			if(i!=-1) {
+				listaUsuario.get(i).notificaDesconexao();
+			}
+		} catch (JMSException|RemoteException e) {
 			e.printStackTrace();
 		}
 		
@@ -216,10 +219,13 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		try {
 			Set<ActiveMQQueue> listaFila = conexao.getDestinationSource().getQueues();
+			Thread.sleep(1000);
 			Iterator<ActiveMQQueue> iterator = listaFila.iterator();
+			
 			while(iterator.hasNext()) {
 				nomeFilas.add(iterator.next().getQueueName());
 			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -265,7 +271,9 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		try {
 			Set<ActiveMQTopic> listaTopico = conexao.getDestinationSource().getTopics();
+			Thread.sleep(1000);
 			Iterator<ActiveMQTopic> iterator = listaTopico.iterator();
+			
 			while(iterator.hasNext()) {
 				nomeTopicos.add(iterator.next().getTopicName());
 			}
@@ -279,6 +287,10 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 	}
 	
 	public boolean produzMensagemFila(String nomeFila, String conteudoMsg) throws RemoteException {
+		
+		if(!verificaFilaExiste(nomeFila)) {
+			return false;
+		}
 		
 		int i;
 		
@@ -304,11 +316,18 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		if(i != -1) {
 			listaUsuario.get(i).notificaMensagem();
 		}
+		else {
+			janela.incrementaQntMensagem(nomeFila);
+		}
 		
 		return true;
 	}
 	
 	public boolean produzMensagemTopico(String nomeTopico, String conteudoMsg) throws RemoteException {
+		
+		if(!verificaTopicoExiste(nomeTopico)) {
+			return false;
+		}
 		
 		conectaBroker();
 		
@@ -365,10 +384,21 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		}
 		
 		desconectaBroker();
+		
+		if(listaMensagem.size()>1) {
+			janela.iniciaValores();
+		}
+		
 		return listaMensagem;
 	}
 	
 	public void assinaTopico(String nomeTopico, String nomeUsuario) throws RemoteException {
-		new Assinante(this, nomeTopico, nomeUsuario);
+		
+		for(int i=0;i<listaAssinates.size();i++) {
+			if(listaAssinates.get(i).nomeUsuario==nomeUsuario) {
+				return;
+			}
+		}
+		listaAssinates.add(new Assinante(this, nomeTopico, nomeUsuario));
 	}
 }

@@ -1,15 +1,41 @@
 import javax.swing.JOptionPane;
 
 public class Notificacao {
+	
+	public static String configuraHost() {
+		
+		String host;
+		
+		host = JOptionPane.showInputDialog("Qual o ip do servidor? (Padrão: localhost)");
+		if(host==null||host.contentEquals("")) {
+			return "localhost";
+		}
+		else {
+			return host;
+		}
+	}
+	
+	public static int configuraPorta() {
+		
+		String porta;
+		
+		porta = JOptionPane.showInputDialog("Qual a porta do servidor? (Padrão: 9090)");
+		if(porta==null||porta.contentEquals("")) {
+			return 9090;
+		}
+		else {
+			return Integer.parseInt(porta);
+		}
+	}
 
 	public static String configuraNome() {
 		
 		String nomeFila = null;
 		
-		nomeFila = JOptionPane.showInputDialog("Digite um nome de usuário");
+		nomeFila = JOptionPane.showInputDialog(null,"Digite um nome de usuário","Nome de usuario",1);
 		
 		while(nomeFila!=null&&nomeFila.contentEquals("")) {
-			nomeFila = JOptionPane.showInputDialog("Nome inválido, digite um nome de usuário");
+			nomeFila = JOptionPane.showInputDialog(null,"Nome inválido, digite um nome de usuário","Nome de usuario",2);
 		}
 		
 		return nomeFila;
@@ -28,11 +54,32 @@ public class Notificacao {
 		return nomeTopico;
 	}
 	
+	
 	public static void usuarioExiste(String nome) {
 		JOptionPane.showMessageDialog(null, "Usuario '"+nome+"' ja existe");
 	}
 	
 	public static void topicoExiste(String nome) {
 		JOptionPane.showMessageDialog(null, "Topico '"+nome+"' ja existe");
+	}
+	
+	public static void desconectado() {
+		JOptionPane.showMessageDialog(null, "Você foi desconectado");
+	}
+	
+	public static void naoExisteUsuario() {
+		JOptionPane.showMessageDialog(null, "Usuario nao existe");
+	}
+	
+	public static void naoExisteTopico() {
+		JOptionPane.showMessageDialog(null, "Topico nao existe");
+	}
+	
+	public static int confirmaApagarFila() {
+		return JOptionPane.showConfirmDialog(null, "Tem certeza?","Apagar Fila",JOptionPane.YES_NO_OPTION);
+	}
+	
+	public static int confirmaApagarTopico() {
+		return JOptionPane.showConfirmDialog(null, "Tem certeza?","Apagar Topico",JOptionPane.YES_NO_OPTION);
 	}
 }

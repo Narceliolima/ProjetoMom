@@ -5,7 +5,7 @@ public class Principal {
 
 	public static void main(String[] args) throws RemoteException{
 		
-		ServidorMOM server = new ServidorMOM();
+		ServidorMOM server = new ServidorMOM(null);
 		
 		
 		ArrayList<String> listaFilas = server.getFilas();

@@ -46,6 +46,9 @@ public class GerenciadorGUI {
 	private ArrayList<JButton> xButtonFila = new ArrayList<JButton>();
 	private ArrayList<JButton> xButtonTopico = new ArrayList<JButton>();
 	//--------------------------------------------/-------------/--------------------------------------------//
+	private JLabel apagarFila;
+	private JLabel apagarTopico;
+	
 	
 	public static void main(String[] args) {
 		
@@ -56,7 +59,7 @@ public class GerenciadorGUI {
 	public GerenciadorGUI() {
 		window = this;
 		try {
-			server = new ServidorMOM();
+			server = new ServidorMOM(window);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
@@ -73,6 +76,7 @@ public class GerenciadorGUI {
 		iniciaLabels();
 		iniciaValores();
 		createRunnable();
+		setMensagemLog("Bem vindo ao serverMOM");
 	}
 	
 	public void atualizaInterface() {
@@ -88,31 +92,13 @@ public class GerenciadorGUI {
 			
 			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getSource() == addUsuario) {
-					String nome = Notificacao.configuraNome();
-					if(nome!=null) {
-						if(!server.verificaFilaExiste(nome)) {
-							server.criaFila(nome);
-							criarBotaoFila();
-							criarLabelFila(nome);
-							criarLabelFila("0");
-							iniciaBotaoFila();
-							setMensagemLog("Usuário '"+nome+"' Criado");
-						}
-						else {
-							Notificacao.usuarioExiste(nome);
-							setMensagemLog("Erro: Usuário Duplicado");
-						}
-					}
+					//Retirado
 				}
 				if(arg0.getSource() == addTopico) {
 					String nome = Notificacao.addTopico();
 					if(nome!=null) {
 						if(!server.verificaTopicoExiste(nome)) {
-							server.criaTopico(nome);
-							criarBotaoTopico();
-							criarLabelTopico(nome);
-							iniciaBotaoTopico();
-							setMensagemLog("Topico '"+nome+"' Criado");
+							adicionaListaTopico(nome);
 						}
 						else {
 							Notificacao.topicoExiste(nome);
@@ -122,21 +108,28 @@ public class GerenciadorGUI {
 				}
 				for(int i=0;i<xButtonFila.size();i++) {
 					if(arg0.getSource() == xButtonFila.get(i)) {
-						setMensagemLog(celulasFila.get(i*2).getText());
-						server.removeFila(celulasFila.get(i*2).getText());
-						setMensagemLog("Usuario '"+celulasFila.get(i*2).getText()+"' Deletado");
-						removeBotaoFila(i);
-						removeLabelFila(i);
-						removeLabelFila(i);
+						if(Notificacao.confirmaApagarFila()==0) {
+							server.removeFila(celulasFila.get(i*2).getText());
+							setMensagemLog("Usuario '"+celulasFila.get(i*2).getText()+"' Deletado");
+							removeBotaoFila(i);
+							removeLabelFila(i);
+							removeLabelFila(i);
+						}
 					}
 				}
 				for(int i=0;i<xButtonTopico.size();i++) {
 					if(arg0.getSource() == xButtonTopico.get(i)) {
-						setMensagemLog(celulasTopico.get(i).getText());
-						server.removeTopico(celulasTopico.get(i).getText());
-						setMensagemLog("Usuario '"+celulasTopico.get(i).getText()+"' Deletado");
-						removeBotaoTopico(i);
-						removeLabelTopico(i);
+						if(Notificacao.confirmaApagarTopico()==0) {
+							try {
+								server.produzMensagemTopico(celulasTopico.get(i).getText(), celulasTopico.get(i).getText()+"<Servidor: <fechado>");
+							} catch (RemoteException e) {
+								e.printStackTrace();
+							}
+							server.removeTopico(celulasTopico.get(i).getText());
+							setMensagemLog("Topico '"+celulasTopico.get(i).getText()+"' Deletado");
+							removeBotaoTopico(i);
+							removeLabelTopico(i);	
+						}
 					}
 				}
 				atualizaInterface();
@@ -146,15 +139,19 @@ public class GerenciadorGUI {
 		addUsuario.addActionListener(ato);
 		addTopico.addActionListener(ato);
 		
-		for(int i=0;i<xButtonFila.size();i++) {
+		int i;
+		
+		for(i=0;i<xButtonFila.size();i++) {
 			xButtonFila.get(i).addActionListener(ato);
-			System.out.println(i);
 		}
 		
-		for(int i=0;i<xButtonTopico.size();i++) {
+		setMensagemLog("Há "+i+" filas criadas");
+		
+		for(i=0;i<xButtonTopico.size();i++) {
 			xButtonTopico.get(i).addActionListener(ato);
-			System.out.println(i);
 		}
+		
+		setMensagemLog("e "+i+" topicos disponiveis");
 	}
 	
 	public void criarBotaoFila() {
@@ -203,6 +200,35 @@ public class GerenciadorGUI {
 	public void removeLabelTopico(int i) {
 		celulasTopico.remove(i);
 		painelTopicos.remove(i*2);
+	}
+	
+	public void incrementaQntMensagem(String nomeFila) {
+		int i = 0;
+		while(i<celulasFila.size()) {
+			if(celulasFila.get(i).getText().contentEquals(nomeFila)) {
+				String valor = celulasFila.get(i+1).getText();
+				celulasFila.get(i+1).setText(""+(Integer.parseInt(valor)+1));
+				setMensagemLog("Mensagem para '"+nomeFila+"' adicionada");
+			}
+			i+=2;
+		}
+	}
+	
+	public void adicionaListaFila(String nome) {
+		server.criaFila(nome);
+		criarBotaoFila();
+		criarLabelFila(nome);
+		criarLabelFila("0");
+		iniciaBotaoFila();
+		setMensagemLog("Usuário '"+nome+"' Criado");
+	}
+	
+	public void adicionaListaTopico(String nome) {
+		server.criaTopico(nome);
+		criarBotaoTopico();
+		criarLabelTopico(nome);
+		iniciaBotaoTopico();
+		setMensagemLog("Topico '"+nome+"' Criado");
 	}
 	
 	public void setlistaFilas(ArrayList<String> listaFilas) {
@@ -274,7 +300,7 @@ public class GerenciadorGUI {
 		scrollLog.setViewportView(textLog);
 	}
 	
-	private void iniciaLabels() {//Reajuste a interface
+	private void iniciaLabels() {
 		
 		labelFilas = new JLabel("Filas");
 		labelFilas.setBounds(102, 6, 44, 15);
@@ -296,16 +322,24 @@ public class GerenciadorGUI {
 		qntMensagensFila.setBounds(158, 33, 74, 15);
 		resumoFilas.add(qntMensagensFila);
 		
-		addUsuario = new JButton("Novo Usuario");
+		addUsuario = new JButton("About");
 		addUsuario.setBounds(12, 398, 235, 25);
 		resumoFilas.add(addUsuario);
+		
+		apagarFila = new JLabel("Remover");
+		apagarFila.setBounds(11, 33, 70, 15);
+		resumoFilas.add(apagarFila);
 		
 		addTopico = new JButton("Novo Topico");
 		addTopico.setBounds(12, 398, 235, 25);
 		resumoTopicos.add(addTopico);
+		
+		apagarTopico = new JLabel("Remover");
+		apagarTopico.setBounds(12, 33, 70, 15);
+		resumoTopicos.add(apagarTopico);
 	}
 	
-	private void iniciaValores() {
+	public void iniciaValores() {
 		
 		ArrayList<String> listaFilas = server.getFilas();
 		ArrayList<Integer> listaQntMensagens = new ArrayList<Integer>();
@@ -313,6 +347,13 @@ public class GerenciadorGUI {
 			listaQntMensagens.add(server.getQuantidadeMsg(listaFilas.get(i)));
 		}
 		ArrayList<String> listaTopicos = server.getTopicos();
+		
+		celulasFila.clear();
+		celulasTopico.clear();
+		xButtonFila.clear();
+		xButtonTopico.clear();
+		painelTopicos.removeAll();
+		painelFilas.removeAll();
 		
 		preenchePainelFila(listaFilas, listaQntMensagens);
 		preenchePainelTopico(listaTopicos);

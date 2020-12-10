@@ -13,7 +13,7 @@ public class Assinante implements MessageListener{
 	
 	private static String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 	private ServidorMOM server;
-	private String nomeUsuario;
+	protected String nomeUsuario;
 	private ActiveMQConnection conexao;
 
 	public Assinante(ServidorMOM server, String nomeTopico, String nomeUsuario) {
@@ -43,9 +43,22 @@ public class Assinante implements MessageListener{
 	public void onMessage(Message mensage) {
 		if(mensage instanceof TextMessage){
 			try{
-				System.out.println(nomeUsuario+"receberia");
-				System.out.println(((TextMessage)mensage).getText());
-			}catch(JMSException e){
+				int i = server.verificaUsuarioExiste(nomeUsuario);
+				String mensageSTR = ((TextMessage)mensage).getText();
+				int indice1 = mensageSTR.indexOf("<")+1;
+				int indice2 = mensageSTR.indexOf(":");
+				String remetente = mensageSTR.substring(indice1, indice2);
+				if(remetente.contentEquals("Servidor")) {
+					server.listaUsuario.get(i).setMensagemTopico(mensageSTR);
+					desconectaBroker();
+				}
+				else if(!nomeUsuario.contentEquals(remetente)) {
+					server.listaUsuario.get(i).setMensagemTopico(mensageSTR);
+				}
+				else if(i==-1) {
+					desconectaBroker();
+				}
+			}catch(JMSException|RemoteException e){
 				e.printStackTrace();
 			}
 		}
