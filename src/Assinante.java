@@ -14,11 +14,13 @@ public class Assinante implements MessageListener{
 	private static String url = ActiveMQConnection.DEFAULT_BROKER_URL;
 	private ServidorMOM server;
 	protected String nomeUsuario;
+	protected String nomeTopico;
 	private ActiveMQConnection conexao;
 
 	public Assinante(ServidorMOM server, String nomeTopico, String nomeUsuario) {
 		this.server = server;
 		this.nomeUsuario = nomeUsuario;
+		this.nomeTopico = nomeTopico;
 		
 		assina(nomeTopico);
 	}

@@ -75,6 +75,10 @@ public class Notificacao {
 		JOptionPane.showMessageDialog(null, "Topico nao existe");
 	}
 	
+	public static void topicoJaAssinado() {
+		JOptionPane.showMessageDialog(null, "Topico ja foi assinado");
+	}
+	
 	public static int confirmaApagarFila() {
 		return JOptionPane.showConfirmDialog(null, "Tem certeza?","Apagar Fila",JOptionPane.YES_NO_OPTION);
 	}

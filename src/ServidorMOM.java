@@ -237,6 +237,29 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		return nomeFilas;
 	}
+	
+	public ArrayList<String> getUsuariosOnline() throws RemoteException {
+		
+		ArrayList<String> listaUsuarioOn = new ArrayList<String>();
+		ArrayList<String> listaFilas = getFilas();
+		String nome;
+		
+		for(int i=0;i<listaUsuario.size();i++) {
+			nome = listaUsuario.get(i).getNome();
+			if(listaFilas.contains(nome)) {
+				listaUsuarioOn.add("*"+nome);
+			}
+		}
+		
+		for(int i=0;i<listaFilas.size();i++) {
+			nome = listaFilas.get(i);
+			if(!listaUsuarioOn.contains("*"+nome)) {
+				listaUsuarioOn.add("-"+nome);
+			}
+		}
+		
+		return listaUsuarioOn;
+	}
 
 	public int getQuantidadeMsg(String nomeFila) {
 		
@@ -287,6 +310,11 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		desconectaBroker();
 		
 		return nomeTopicos;
+	}
+	
+	public ArrayList<String> getTopicosDisponiveis() throws RemoteException {
+		
+		return getTopicos();
 	}
 	
 	public boolean produzMensagemFila(String nomeFila, String conteudoMsg) throws RemoteException {
@@ -395,13 +423,14 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		return listaMensagem;
 	}
 	
-	public void assinaTopico(String nomeTopico, String nomeUsuario) throws RemoteException {
+	public boolean assinaTopico(String nomeTopico, String nomeUsuario) throws RemoteException {
 		
 		for(int i=0;i<listaAssinates.size();i++) {
-			if(listaAssinates.get(i).nomeUsuario==nomeUsuario) {
-				return;
+			if(listaAssinates.get(i).nomeUsuario.contentEquals(nomeUsuario)&&listaAssinates.get(i).nomeTopico.contentEquals(nomeTopico)) {
+				return false;
 			}
 		}
 		listaAssinates.add(new Assinante(this, nomeTopico, nomeUsuario));
+		return true;
 	}
 }

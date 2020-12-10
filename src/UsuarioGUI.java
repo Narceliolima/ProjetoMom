@@ -42,6 +42,8 @@ public class UsuarioGUI {
 	private JLabel lblNome;
 	private JLabel lblDigiteAqui;
 	private JButton assinarTopico ;
+	private JButton botaoGetUsu;
+	private JButton botaoGetTop;
 	private JTextField chat;
 	//--------------------------------------------/-------------/--------------------------------------------//
 	private JRadioButton radioUsuario;
@@ -87,10 +89,28 @@ public class UsuarioGUI {
 						usuario.recebeMensagem(nome, false);
 					}
 				}
+				if(arg0.getSource() == botaoGetUsu) {
+					ArrayList<String> listaUsuarios = usuario.getUsuarios();
+					setMensagemLog("Lista de usuarios existentes");
+					setMensagemLog("Legenda: * = online, - = offline");
+					for(int i=0;i<listaUsuarios.size();i++) {
+						setMensagemLog(listaUsuarios.get(i));
+					}
+				}
+				if(arg0.getSource() == botaoGetTop) {
+					ArrayList<String> listaTopicos = usuario.getTopicos();
+					setMensagemLog("Lista de topicos existentes");
+					setMensagemLog("Legenda: * = assinados, - = disponi");
+					for(int i=0;i<listaTopicos.size();i++) {
+						setMensagemLog(listaTopicos.get(i));
+					}
+				}
 			}
 		};
 		
 		assinarTopico.addActionListener(ato);
+		botaoGetUsu.addActionListener(ato);
+		botaoGetTop.addActionListener(ato);
 		
 		chat.addActionListener(new ActionListener() {
 
@@ -138,11 +158,11 @@ public class UsuarioGUI {
 		frame.getContentPane().add(resumoTopicos);
 		
 		labelLog = new JLabel("Log");
-		labelLog.setBounds(645, 5, 42, 15);
+		labelLog.setBounds(644, 5, 42, 15);
 		frame.getContentPane().add(labelLog);
 		
 		scrollLog = new JScrollPane();
-		scrollLog.setBounds(534, 32, 254, 391);
+		scrollLog.setBounds(534, 32, 254, 365);
 		frame.getContentPane().add(scrollLog);
 		
 		textLog = new JTextArea();
@@ -212,12 +232,34 @@ public class UsuarioGUI {
 		lblDigiteAqui = new JLabel("Digite aqui sua mensagem");
 		lblDigiteAqui.setBounds(10, 491, 201, 15);
 		frame.getContentPane().add(lblDigiteAqui);
+		
+		botaoGetUsu = new JButton("Usuarios Disponiveis");
+		botaoGetUsu.setBounds(534, 397, 254, 21);
+		frame.getContentPane().add(botaoGetUsu);
+		
+		botaoGetTop = new JButton("Topicos Disponiveis");
+		botaoGetTop.setBounds(534, 421, 254, 21);
+		frame.getContentPane().add(botaoGetTop);
 	}
 	
 	private void iniciaValores() {
 		
+		ArrayList<String> listaUsuarios = usuario.getUsuarios();
+		ArrayList<String> listaTopicos = usuario.getTopicos();
+		
 		recebeMensagensUsuarios();
+		
 		setMensagemLog("Bem vindo(a) "+usuario.nome);
+		setMensagemLog("Lista de usuarios existentes");
+		setMensagemLog("Legenda: * = online, - = offline");
+		for(int i=0;i<listaUsuarios.size();i++) {
+			setMensagemLog(listaUsuarios.get(i));
+		}
+		
+		setMensagemLog("Lista de topicos existentes");
+		for(int i=0;i<listaTopicos.size();i++) {
+			setMensagemLog(listaTopicos.get(i));
+		}
 	}
 	
 	private void configuraUsuario() {

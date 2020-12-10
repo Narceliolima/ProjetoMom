@@ -75,7 +75,9 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 				return server.recebeMensagemFila(nome);
 			}
 			else {
-				server.assinaTopico(nome, this.nome);
+				if(!server.assinaTopico(nome, this.nome)) {
+					Notificacao.topicoJaAssinado();
+				}
 			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -94,6 +96,24 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 	
 	public void setMensagemTopico(String mensagem) throws RemoteException {
 		janela.escreveMensagensTopico(mensagem);
+	}
+	
+	public ArrayList<String> getUsuarios() {
+		try {
+			return server.getUsuariosOnline();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+		return new ArrayList<String>();
+	}
+	
+	public ArrayList<String> getTopicos() {
+		try {
+			return server.getTopicosDisponiveis();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+		return new ArrayList<String>();
 	}
 	
 	public String getNome() throws RemoteException {
