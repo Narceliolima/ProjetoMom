@@ -117,12 +117,14 @@ public class UsuarioGUI {
 			public void actionPerformed(ActionEvent arg0) {
 				String mensagem = arg0.getActionCommand();
 				if(radioUsuario.isSelected()) {
-					textUsuarios.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
-					usuario.enviaMensagem(textDestino.getText(), usuario.nome+": "+mensagem, true);
+					if(usuario.enviaMensagem(textDestino.getText(), usuario.nome+": "+mensagem, true)) {
+						textUsuarios.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
+					}
 				}
 				else {
-					textTopicos.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
-					usuario.enviaMensagem(textDestino.getText(), textDestino.getText()+"<"+usuario.nome+": "+mensagem, false);
+					if(usuario.enviaMensagem(textDestino.getText(), textDestino.getText()+"<"+usuario.nome+": "+mensagem, false)){
+						textTopicos.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
+					}
 				}
 				chat.setText("");
 			}

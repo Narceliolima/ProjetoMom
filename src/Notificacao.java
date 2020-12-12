@@ -75,6 +75,10 @@ public class Notificacao {
 		JOptionPane.showMessageDialog(null, "Topico nao existe");
 	}
 	
+	public static void servidorNaoDisponivel() {
+		JOptionPane.showMessageDialog(null, "Servidor está offline acesse novamente mais tarde");
+	}
+	
 	public static void topicoJaAssinado() {
 		JOptionPane.showMessageDialog(null, "Topico ja foi assinado");
 	}

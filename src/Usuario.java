@@ -25,7 +25,9 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 			server = (ServidorRemoto)registro.lookup("//"+host+":"+porta+"/Servidor");
 		}
 		catch (Exception e) {
+			Notificacao.servidorNaoDisponivel();
 			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 	
@@ -50,22 +52,25 @@ public class Usuario extends UnicastRemoteObject implements UsuarioRemoto {
 		return false;
 	}
 	
-	public void enviaMensagem(String nome, String conteudoMsg, boolean tipoFila) {
+	public boolean enviaMensagem(String nome, String conteudoMsg, boolean tipoFila) {
 		
 		try {
 			if(tipoFila) {
 				if(!server.produzMensagemFila(nome, conteudoMsg)) {
 					Notificacao.naoExisteUsuario();
+					return false;
 				}
 			}
 			else {
 				if(!server.produzMensagemTopico(nome, conteudoMsg)) {
 					Notificacao.naoExisteTopico();
+					return false;
 				}
 			}
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
+		return true;
 	}
 	
 	public ArrayList<String> recebeMensagem(String nome, boolean tipoFila) {

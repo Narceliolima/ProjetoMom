@@ -245,9 +245,13 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		String nome;
 		
 		for(int i=0;i<listaUsuario.size();i++) {
-			nome = listaUsuario.get(i).getNome();
-			if(listaFilas.contains(nome)) {
-				listaUsuarioOn.add("*"+nome);
+			try {
+				nome = listaUsuario.get(i).getNome();
+				if(listaFilas.contains(nome)) {
+					listaUsuarioOn.add("*"+nome);
+				}
+			} catch (RemoteException e) {
+				//Num faz nada
 			}
 		}
 		
