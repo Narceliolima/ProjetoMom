@@ -1,3 +1,4 @@
+import java.net.URISyntaxException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -24,7 +25,6 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 
 	private static final long serialVersionUID = 1L;
 	private String url = ActiveMQConnection.DEFAULT_BROKER_URL;
-	private ActiveMQConnection conexao;
 	protected ArrayList<UsuarioRemoto> listaUsuario = new ArrayList<UsuarioRemoto>();
 	private ArrayList<Assinante> listaAssinates = new ArrayList<Assinante>();
 	private Registry registro;
@@ -47,21 +47,26 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		}
 	}
 	
-	public void conectaBroker() {
+	public ActiveMQConnection conectaBroker() {
+		
+		ActiveMQConnection conexao;
 		
 		try {
 			conexao = ActiveMQConnection.makeConnection(url);
 			conexao.start();
-		} catch (Exception e) {
+		} catch (JMSException|URISyntaxException e) {
+			conexao = null;
 			e.printStackTrace();
-		}		
+		}	
+		
+		return conexao;
 	}
 	
-	public void desconectaBroker() {
+	public void desconectaBroker(ActiveMQConnection conexao) {
 		
 		try {
 			conexao.close();
-		} catch (Exception e) {
+		} catch (JMSException e) {
 			e.printStackTrace();
 		}
 	}
@@ -147,7 +152,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 	
 	public boolean criaFila(String nomeFila) {
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -160,13 +165,13 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			return false;
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 		return true;
 	}
 	
 	public boolean criaTopico(String nomeTopico) {
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -179,14 +184,14 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			return false;
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 		
 		return true;
 	}
 	
 	public void removeFila(String nomeFila) {
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			conexao.destroyDestination(new ActiveMQQueue(nomeFila));
@@ -198,12 +203,12 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			e.printStackTrace();
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 	}
 	
 	public void removeTopico(String nomeTopico) {
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			conexao.destroyDestination(new ActiveMQTopic(nomeTopico));
@@ -211,14 +216,14 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			e.printStackTrace();
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 	}
 	
 	public ArrayList<String> getFilas() {
 		
 		ArrayList<String> nomeFilas = new ArrayList<String>();
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			Set<ActiveMQQueue> listaFila = conexao.getDestinationSource().getQueues();
@@ -233,7 +238,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			e.printStackTrace();
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 		
 		return nomeFilas;
 	}
@@ -269,7 +274,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		int k = 0;
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			QueueSession sessaoFila = conexao.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -288,7 +293,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			e.printStackTrace();
 		}		
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 		
 		return k;
 	}
@@ -297,7 +302,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		ArrayList<String> nomeTopicos = new ArrayList<String>();
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			Set<ActiveMQTopic> listaTopico = conexao.getDestinationSource().getTopics();
@@ -311,13 +316,13 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			e.printStackTrace();
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 		
 		return nomeTopicos;
 	}
 	
 	public ArrayList<String> getTopicosDisponiveis() throws RemoteException {
-		
+				
 		return getTopicos();
 	}
 	
@@ -329,7 +334,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		int i;
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -344,7 +349,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			return false;
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 		
 		i = verificaUsuarioExiste(nomeFila);
 		
@@ -364,7 +369,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			return false;
 		}
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -379,7 +384,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			return false;
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 		return true;
 	}
 	
@@ -387,7 +392,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 		
 		ArrayList<String> listaMensagem = new ArrayList<String>();
 		
-		conectaBroker();
+		ActiveMQConnection conexao = conectaBroker();
 		
 		try {
 			Session sessao = conexao.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -418,7 +423,7 @@ public class ServidorMOM extends UnicastRemoteObject implements ServidorRemoto {
 			listaMensagem.add("<error>");
 		}
 		
-		desconectaBroker();
+		desconectaBroker(conexao);
 		
 		if(listaMensagem.size()>1) {
 			janela.iniciaValores();

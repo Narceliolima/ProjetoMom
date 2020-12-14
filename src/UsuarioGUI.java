@@ -6,12 +6,14 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JScrollPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JRadioButton;
+import javax.swing.JList;
 
 public class UsuarioGUI {
 
@@ -29,7 +31,6 @@ public class UsuarioGUI {
 	private JScrollPane scrollUsuario;
 	private JScrollPane scrollChat;
 	private JScrollPane scrollTopico;
-	private JTextArea textDestino;
 	private JTextArea textUsuarios;
 	private JTextArea textLog;
 	private JTextArea textTopicos;
@@ -39,16 +40,22 @@ public class UsuarioGUI {
 	private JLabel labelUsuarios;
 	private JLabel labelTopicos;
 	private JLabel labelLog;
-	private JLabel lblNome;
 	private JLabel lblDigiteAqui;
 	private JButton assinarTopico ;
-	private JButton botaoGetUsu;
-	private JButton botaoGetTop;
 	private JTextField chat;
 	//--------------------------------------------/-------------/--------------------------------------------//
 	private JRadioButton radioUsuario;
 	private JRadioButton radioTopico;
 	private ButtonGroup radioGrupo = new ButtonGroup();
+	private JPanel resumoDisponiveis;
+	private JLabel labelUsuariosExistentes;
+	private JScrollPane scrollUsuarioDis;
+	private JScrollPane scrollTopicosDis;
+	private JLabel labelTopicosDisponveis;
+	private JList<String> jListaUsuarios;
+	private JList<String> jListaTopicos;
+	private DefaultListModel<String> modeloUsuarios = new DefaultListModel<>();
+	private DefaultListModel<String> modeloTopicos = new DefaultListModel<>();
 
 	public static void main(String[] args) {
 		
@@ -67,9 +74,8 @@ public class UsuarioGUI {
 
 	private void initialize() {
 		frame = new JFrame();
-		frame.setBounds(100, 100, 804, 575);
+		frame.setBounds(100, 100, 1010, 530);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.getContentPane().setLayout(null);
 		
 		iniciaPaineis();
 		iniciaLabels();
@@ -84,46 +90,31 @@ public class UsuarioGUI {
 			
 			public void actionPerformed(ActionEvent arg0) {
 				if(arg0.getSource() == assinarTopico) {
-					String nome = Notificacao.addTopico();
+					int index = jListaTopicos.getSelectedIndex();
+					String nome = modeloTopicos.get(index);
 					if(nome!=null) {
 						usuario.recebeMensagem(nome, false);
-					}
-				}
-				if(arg0.getSource() == botaoGetUsu) {
-					ArrayList<String> listaUsuarios = usuario.getUsuarios();
-					setMensagemLog("Lista de usuarios existentes");
-					setMensagemLog("Legenda: * = online, - = offline");
-					for(int i=0;i<listaUsuarios.size();i++) {
-						setMensagemLog(listaUsuarios.get(i));
-					}
-				}
-				if(arg0.getSource() == botaoGetTop) {
-					ArrayList<String> listaTopicos = usuario.getTopicos();
-					setMensagemLog("Lista de topicos existentes");
-					setMensagemLog("Legenda: * = assinados, - = disponi");
-					for(int i=0;i<listaTopicos.size();i++) {
-						setMensagemLog(listaTopicos.get(i));
 					}
 				}
 			}
 		};
 		
 		assinarTopico.addActionListener(ato);
-		botaoGetUsu.addActionListener(ato);
-		botaoGetTop.addActionListener(ato);
 		
 		chat.addActionListener(new ActionListener() {
 
 			public void actionPerformed(ActionEvent arg0) {
 				String mensagem = arg0.getActionCommand();
 				if(radioUsuario.isSelected()) {
-					if(usuario.enviaMensagem(textDestino.getText(), usuario.nome+": "+mensagem, true)) {
-						textUsuarios.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
+					int index = jListaUsuarios.getSelectedIndex();
+					if(usuario.enviaMensagem(modeloUsuarios.get(index).replace(modeloUsuarios.get(index).charAt(0), ' ').replaceFirst(" ", ""), usuario.nome+": "+mensagem, true)) {
+						textUsuarios.append("Você>"+modeloUsuarios.get(index).replace(modeloUsuarios.get(index).charAt(0), ' ').replaceFirst(" ", "")+": "+mensagem+"\n");
 					}
 				}
 				else {
-					if(usuario.enviaMensagem(textDestino.getText(), textDestino.getText()+"<"+usuario.nome+": "+mensagem, false)){
-						textTopicos.append("Você>"+textDestino.getText()+": "+mensagem+"\n");
+					int index = jListaTopicos.getSelectedIndex();
+					if(usuario.enviaMensagem(modeloTopicos.get(index), modeloTopicos.get(index)+"<"+usuario.nome+": "+mensagem, false)){
+						textTopicos.append("Você>"+modeloTopicos.get(index)+": "+mensagem+"\n");
 					}
 				}
 				chat.setText("");
@@ -138,6 +129,38 @@ public class UsuarioGUI {
 		}
 	}
 	
+	public int contador = 0;
+	
+	public void recebeListaUsuarios() {
+		System.out.println(contador);
+		ArrayList<String> listaUsuarios = usuario.getUsuarios();
+		System.out.println(listaUsuarios);
+		int index = jListaUsuarios.getSelectedIndex();
+		if(index<0) {
+			index = 0;
+		}
+		modeloUsuarios.removeAllElements();
+		for(int i=0;i<listaUsuarios.size();i++) {
+			modeloUsuarios.addElement(listaUsuarios.get(i));
+		}
+		jListaUsuarios.setSelectedIndex(index);
+		contador++;
+	}
+	
+	public void recebeListaTopicos() {
+		ArrayList<String> listaTopicos = usuario.getTopicos();
+		System.out.println(listaTopicos);
+		int index = jListaTopicos.getSelectedIndex();
+		if(index<0) {
+			index = 0;
+		}
+		modeloTopicos.removeAllElements();
+		for(int i=0;i<listaTopicos.size();i++) {
+			modeloTopicos.addElement(listaTopicos.get(i));
+		}
+		jListaTopicos.setSelectedIndex(index);
+	}
+	
 	public void escreveMensagensTopico(String mensagem) {
 		textTopicos.append(mensagem+"\n");
 	}
@@ -148,23 +171,24 @@ public class UsuarioGUI {
 	}
 	
 	private void iniciaPaineis() {
+		frame.getContentPane().setLayout(null);
 		
 		resumoUsuario = new JPanel();
-		resumoUsuario.setBounds(0, 0, 259, 435);
+		resumoUsuario.setBounds(197, 2, 259, 435);
 		resumoUsuario.setLayout(null);
 		frame.getContentPane().add(resumoUsuario);
 		
 		resumoTopicos = new JPanel();
+		resumoTopicos.setBounds(468, 2, 259, 435);
 		resumoTopicos.setLayout(null);
-		resumoTopicos.setBounds(267, 0, 259, 435);
 		frame.getContentPane().add(resumoTopicos);
 		
 		labelLog = new JLabel("Log");
-		labelLog.setBounds(644, 5, 42, 15);
+		labelLog.setBounds(846, 4, 42, 15);
 		frame.getContentPane().add(labelLog);
 		
 		scrollLog = new JScrollPane();
-		scrollLog.setBounds(534, 32, 254, 365);
+		scrollLog.setBounds(739, 31, 254, 406);
 		frame.getContentPane().add(scrollLog);
 		
 		textLog = new JTextArea();
@@ -172,17 +196,12 @@ public class UsuarioGUI {
 		scrollLog.setViewportView(textLog);
 		
 		scrollChat = new JScrollPane();
-		scrollChat.setBounds(10, 510, 782, 30);
+		scrollChat.setBounds(10, 467, 983, 30);
 		frame.getContentPane().add(scrollChat);
 		
 		chat = new JTextField();
 		scrollChat.setViewportView(chat);
 		chat.setColumns(10);
-		
-		textDestino = new JTextArea();
-		textDestino.setToolTipText("");
-		textDestino.setBounds(331, 445, 457, 21);
-		frame.getContentPane().add(textDestino);
 		
 	}
 	
@@ -216,52 +235,59 @@ public class UsuarioGUI {
 		textTopicos.setEditable(false);
 		scrollTopico.setViewportView(textTopicos);
 		
-		radioUsuario = new JRadioButton("Usuario");
-		radioUsuario.setSelected(true);
-		radioUsuario.setBounds(10, 443, 88, 23);
-		radioGrupo.add(radioUsuario);
-		frame.getContentPane().add(radioUsuario);
-		
-		radioTopico = new JRadioButton("Topico");
-		radioTopico.setBounds(102, 443, 81, 23);
-		radioGrupo.add(radioTopico);
-		frame.getContentPane().add(radioTopico);
-		
-		lblNome = new JLabel("Nome do destino");
-		lblNome.setBounds(197, 447, 131, 15);
-		frame.getContentPane().add(lblNome);
-		
 		lblDigiteAqui = new JLabel("Digite aqui sua mensagem");
-		lblDigiteAqui.setBounds(10, 491, 201, 15);
+		lblDigiteAqui.setBounds(10, 449, 201, 15);
 		frame.getContentPane().add(lblDigiteAqui);
 		
-		botaoGetUsu = new JButton("Usuarios Disponiveis");
-		botaoGetUsu.setBounds(534, 397, 254, 21);
-		frame.getContentPane().add(botaoGetUsu);
+		resumoDisponiveis = new JPanel();
+		resumoDisponiveis.setLayout(null);
+		resumoDisponiveis.setBounds(0, 2, 194, 435);
+		frame.getContentPane().add(resumoDisponiveis);
 		
-		botaoGetTop = new JButton("Topicos Disponiveis");
-		botaoGetTop.setBounds(534, 421, 254, 21);
-		frame.getContentPane().add(botaoGetTop);
+		labelUsuariosExistentes = new JLabel("Usuarios");
+		labelUsuariosExistentes.setBounds(74, 12, 77, 15);
+		resumoDisponiveis.add(labelUsuariosExistentes);
+		
+		scrollUsuarioDis = new JScrollPane();
+		scrollUsuarioDis.setBounds(12, 33, 168, 179);
+		resumoDisponiveis.add(scrollUsuarioDis);
+		
+		jListaUsuarios = new JList<String>(modeloUsuarios);
+		scrollUsuarioDis.setViewportView(jListaUsuarios);
+		
+		scrollTopicosDis = new JScrollPane();
+		scrollTopicosDis.setBounds(12, 255, 168, 168);
+		resumoDisponiveis.add(scrollTopicosDis);
+		
+		jListaTopicos = new JList<String>(modeloTopicos);
+		scrollTopicosDis.setViewportView(jListaTopicos);
+		
+		labelTopicosDisponveis = new JLabel("Topicos");
+		labelTopicosDisponveis.setBounds(73, 224, 65, 15);
+		resumoDisponiveis.add(labelTopicosDisponveis);
+		
+		radioUsuario = new JRadioButton("");
+		radioUsuario.setBounds(46, 8, 29, 23);
+		resumoDisponiveis.add(radioUsuario);
+		radioUsuario.setSelected(true);
+		radioGrupo.add(radioUsuario);
+		
+		radioTopico = new JRadioButton("");
+		radioTopico.setBounds(46, 220, 28, 23);
+		resumoDisponiveis.add(radioTopico);
+		radioGrupo.add(radioTopico);
 	}
 	
 	private void iniciaValores() {
 		
-		ArrayList<String> listaUsuarios = usuario.getUsuarios();
-		ArrayList<String> listaTopicos = usuario.getTopicos();
-		
 		recebeMensagensUsuarios();
 		
 		setMensagemLog("Bem vindo(a) "+usuario.nome);
-		setMensagemLog("Lista de usuarios existentes");
+		setMensagemLog("Lista de usuarios");
 		setMensagemLog("Legenda: * = online, - = offline");
-		for(int i=0;i<listaUsuarios.size();i++) {
-			setMensagemLog(listaUsuarios.get(i));
-		}
-		
-		setMensagemLog("Lista de topicos existentes");
-		for(int i=0;i<listaTopicos.size();i++) {
-			setMensagemLog(listaTopicos.get(i));
-		}
+		recebeListaUsuarios();
+		recebeListaTopicos();
+		new Rotina(this);
 	}
 	
 	private void configuraUsuario() {
